@@ -1,0 +1,33 @@
+spring:
+  redis:
+    host: 0.0.0.0
+    port: 6379
+    password:
+  datasource:
+    url: jdbc:postgresql://marketdb-postgresql-do-user-9153772-0.b.db.ondigitalocean.com:25060/defaultdb
+    username: doadmin
+    password: AVNS_dn7BmTEG_jMD5Zor0w8
+    type: org.springframework.jdbc.datasource.SimpleDriverDataSource
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 12
+
+service:
+  proxy:
+    url: http://localhost:8022
+
+repricer:
+  jobEnabled: true
+  password-key: x!z%C*F-JaNdRgUkXp2s5v8y/B?D(G+K
+  productCron: '0 0 0/6 * * ?'
+  accountUpdateDataCron: '0 0 0/1 * * ?'
+  priceChangeCron: '0 0/15 * * * ?'
+  paymentCron: '0/10 * * * * ?'
+  accountInitializeCron: '0 0 0/1 * * ?'
+  repairStuckStateCron: '0 0 0/1 * * ?'
+  cookieBotProtectionBypassEnabled: true
+  maxUpdateInProgress: 3
+
+logging:
+  level:
+    org.jooq.tools.LoggerListener: DEBUG

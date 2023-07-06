@@ -1,0 +1,95 @@
+server:
+  port: ${server.port}
+  error:
+    include-stacktrace: ALWAYS
+
+management:
+  security:
+    flag: false
+  server:
+    port: ${management.port}
+  metrics:
+    prometheus:
+      enabled: true
+  endpoint:
+    health:
+      show-details: always
+    metrics:
+      enabled: true
+    prometheus:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+logging:
+  level:
+    dev.crashteam.uzumspace.service: DEBUG
+    dev.crashteam.uzumspace.price: DEBUG
+
+spring:
+  application:
+    name: ${project.name}
+    output:
+      ansi:
+        enabled: always
+  redis:
+    host: localhost
+    port: 6379
+  datasource:
+    url: jdbc:postgresql://localhost:5432/repricer
+    username: postgres
+    password: postgres
+    type: org.springframework.jdbc.datasource.SimpleDriverDataSource
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 12
+  liquibase:
+    enabled: true
+    change-log: "classpath:db/changelog/db.pg.changelog-main.yml"
+  quartz:
+    job-store-type: jdbc
+    properties:
+      org.quartz.scheduler.instanceName: repricer
+      org.quartz.scheduler.instanceId: AUTO
+      org.quartz.scheduler.skipUpdateCheck: true
+      org.quartz.scheduler.threadsInheritContextClassLoaderOfInitializer: true
+      org.quartz.threadPool.threadCount: 40
+      org.quartz.threadPool.threadPriority: 5
+      org.quartz.jobStore.isClustered: false
+      org.quartz.jobStore.misfireThreshold: 30000
+      org.quartz.jobStore.class: org.springframework.scheduling.quartz.LocalDataSourceJobStore
+      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.PostgreSQLDelegate
+      org.quartz.jobStore.useProperties: false
+      org.quartz.jobStore.tablePrefix: QRTZ_
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com
+          issuer-uri: https://securetoken.google.com/${FIREBASE_APP_NAME:marketdb-gloom}
+
+service:
+  proxy:
+    url: http://localhost:8022
+
+proxies:
+  proxyline:
+    apiKey: proxy-api-key
+
+repricer:
+  jobEnabled: true
+  passwordKey: x!z%C*F-JaNdRgUkXp2s5v8y/B?D(G+K
+  productCron: '0 0 0/6 * * ?'
+  accountUpdateDataCron: '0 0 0/1 * * ?'
+  priceChangeCron: '0 0/15 * * * ?'
+  paymentCron: '0/10 * * * * ?'
+  accountInitializeCron: '0/20 * * * * ?'
+  repairStuckStateCron: '0 0 0/1 * * ?'
+  cookieBotProtectionBypassEnabled: true
+  maxUpdateInProgress: 3
+
+youkassa:
+  shopId: 819837
+  key: 'test_6qE96u7LbOog1NcjX9AocDz8sviH_FIhQ25sO2Jz0Qk'
