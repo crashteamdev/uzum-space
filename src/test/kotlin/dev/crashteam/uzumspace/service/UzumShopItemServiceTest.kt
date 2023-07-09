@@ -29,7 +29,7 @@ class UzumShopItemServiceTest : ContainerConfiguration() {
     lateinit var remoteImageLoader: RemoteImageLoader
 
     @Value("classpath:cc1j1sp1ati4tcj33p5g-original.jpg")
-    lateinit var keImage: Resource
+    lateinit var uzumImage: Resource
 
     @Value("classpath:c9to5uua4v5ivhop2260.jpg")
     lateinit var firstProductImage: Resource
@@ -38,15 +38,15 @@ class UzumShopItemServiceTest : ContainerConfiguration() {
     lateinit var secondProductImage: Resource
 
     @Test
-    fun `add shop item from KazanExpress data`() {
+    fun `add shop item from Uzum data`() {
         // Given
         val productId = 4315422L
         val skuId = 5424121L
         val product = buildProductResponse(productId, skuId)
-        whenever(remoteImageLoader.loadResource(any())).then { keImage.inputStream.readAllBytes() }
+        whenever(remoteImageLoader.loadResource(any())).then { uzumImage.inputStream.readAllBytes() }
 
         // When
-        uzumShopItemService.addShopItemFromKeData(product.payload!!.data)
+        uzumShopItemService.addShopItemFromUzumData(product.payload!!.data)
         val kazanExpressShopItemEntity = uzumShopItemRepository.findByProductIdAndSkuId(productId, skuId)
 
         // Then

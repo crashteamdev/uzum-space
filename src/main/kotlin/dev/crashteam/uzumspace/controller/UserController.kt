@@ -1,7 +1,7 @@
 package dev.crashteam.uzumspace.controller
 
-import dev.crashteam.openapi.kerepricer.api.UserApi
-import dev.crashteam.openapi.kerepricer.model.AccountSubscription
+import dev.crashteam.openapi.space.api.UserApi
+import dev.crashteam.openapi.space.model.AccountSubscription
 import dev.crashteam.uzumspace.db.model.enums.SubscriptionPlan
 import dev.crashteam.uzumspace.repository.postgre.AccountRepository
 import org.springframework.http.ResponseEntity
@@ -32,9 +32,9 @@ class UserController(
             }
             val accountSubscription = AccountSubscription().apply {
                 this.plan = when (accountEntity.subscription.plan) {
-                    SubscriptionPlan.default_ -> dev.crashteam.openapi.kerepricer.model.SubscriptionPlan.DEFAULT
-                    SubscriptionPlan.pro -> dev.crashteam.openapi.kerepricer.model.SubscriptionPlan.PRO
-                    SubscriptionPlan.advanced -> dev.crashteam.openapi.kerepricer.model.SubscriptionPlan.ADVANCED
+                    SubscriptionPlan.default_ -> dev.crashteam.openapi.space.model.SubscriptionPlan.DEFAULT
+                    SubscriptionPlan.pro -> dev.crashteam.openapi.space.model.SubscriptionPlan.PRO
+                    SubscriptionPlan.advanced -> dev.crashteam.openapi.space.model.SubscriptionPlan.ADVANCED
                 }
                 this.validUntil = accountEntity.subscriptionValidUntil!!.atOffset(ZoneOffset.UTC)
             }

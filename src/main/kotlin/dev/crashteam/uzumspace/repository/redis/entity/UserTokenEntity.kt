@@ -11,7 +11,7 @@ data class UserTokenEntity(
     @Indexed
     val userId: String,
     @Indexed
-    val keAccountId: String,
+    val uzumAccountId: String,
     val accessToken: String,
     val refreshToken: String
 )

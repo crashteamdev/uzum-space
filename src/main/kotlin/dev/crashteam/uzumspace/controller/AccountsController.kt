@@ -1,11 +1,12 @@
 package dev.crashteam.uzumspace.controller
 
-import dev.crashteam.openapi.kerepricer.api.AccountsApi
-import dev.crashteam.openapi.kerepricer.model.*
-import dev.crashteam.uzumspace.db.model.tables.KeAccountShop.*
-import dev.crashteam.uzumspace.db.model.tables.KeAccountShopItem.KE_ACCOUNT_SHOP_ITEM
-import dev.crashteam.uzumspace.db.model.tables.KeAccountShopItemCompetitor.KE_ACCOUNT_SHOP_ITEM_COMPETITOR
-import dev.crashteam.uzumspace.db.model.tables.KeAccountShopItemPriceHistory.KE_ACCOUNT_SHOP_ITEM_PRICE_HISTORY
+import dev.crashteam.openapi.space.api.AccountsApi
+import dev.crashteam.openapi.space.model.*
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItemPriceHistory.UZUM_ACCOUNT_SHOP_ITEM_PRICE_HISTORY
+import dev.crashteam.uzumspace.db.model.enums.MonitorState
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShop.*
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItem.UZUM_ACCOUNT_SHOP_ITEM
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItemCompetitor.UZUM_ACCOUNT_SHOP_ITEM_COMPETITOR
 import dev.crashteam.uzumspace.repository.postgre.UzumShopItemPriceHistoryRepository
 import dev.crashteam.uzumspace.service.*
 import dev.crashteam.uzumspace.service.error.AccountItemCompetitorLimitExceededException
@@ -34,31 +35,31 @@ private val log = KotlinLogging.logger {}
 class AccountsController(
     private val uzumAccountService: UzumAccountService,
     private val uzumAccountShopService: UzumAccountShopService,
-    private val updateKeAccountService: UpdateKeAccountService,
+    private val updateUzumAccountService: UpdateUzumAccountService,
     private val uzumShopItemService: UzumShopItemService,
-    private val keShopItemPriceChangeRepository: UzumShopItemPriceHistoryRepository,
+    private val uzumShopItemPriceHistoryRepository: UzumShopItemPriceHistoryRepository,
     private val conversionService: ConversionService,
     private val urlToProductResolver: UrlToProductResolver
 ) : AccountsApi {
 
-    override fun addKeAccount(
+    override fun addUzumAccount(
         xRequestID: UUID,
-        addKeAccountRequest: Mono<AddKeAccountRequest>,
+        addUzumAccountRequest: Mono<AddUzumAccountRequest>,
         exchange: ServerWebExchange
-    ): Mono<ResponseEntity<KeAccount>> {
+    ): Mono<ResponseEntity<UzumAccount>> {
         return exchange.getPrincipal<Principal>().flatMap { principal ->
-            addKeAccountRequest.flatMap { request ->
+            addUzumAccountRequest.flatMap { request ->
                 try {
                     if (request.login.isNullOrEmpty() || request.password.isNullOrEmpty()) {
-                        return@flatMap ResponseEntity.badRequest().build<KeAccount>().toMono()
+                        return@flatMap ResponseEntity.badRequest().build<UzumAccount>().toMono()
                     }
-                    val keAccountEntity = uzumAccountService.addKeAccount(principal.name, request.login, request.password)
-                    val keAccount = conversionService.convert(keAccountEntity, KeAccount::class.java)
-                    ResponseEntity.ok(keAccount).toMono()
+                    val uzumAccountEntity = uzumAccountService.addUzumAccount(principal.name, request.login, request.password)
+                    val uzumAccount = conversionService.convert(uzumAccountEntity, UzumAccount::class.java)
+                    ResponseEntity.ok(uzumAccount).toMono()
                 } catch (e: AccountItemPoolLimitExceededException) {
-                    return@flatMap ResponseEntity.status(HttpStatus.FORBIDDEN).build<KeAccount>().toMono()
+                    return@flatMap ResponseEntity.status(HttpStatus.FORBIDDEN).build<UzumAccount>().toMono()
                 } catch (e: IllegalArgumentException) {
-                    return@flatMap ResponseEntity.status(HttpStatus.FORBIDDEN).build<KeAccount>().toMono()
+                    return@flatMap ResponseEntity.status(HttpStatus.FORBIDDEN).build<UzumAccount>().toMono()
                 }
             }
         }.doOnError {
@@ -66,21 +67,21 @@ class AccountsController(
         }
     }
 
-    override fun addKeAccountShopItemCompetitor(
+    override fun addUzumAccountShopItemCompetitor(
         xRequestID: UUID,
         id: UUID,
-        addKeAccountShopItemCompetitorRequest: Mono<AddKeAccountShopItemCompetitorRequest>,
+        addUzumAccountShopItemCompetitorRequest: Mono<AddUzumAccountShopItemCompetitorRequest>,
         exchange: ServerWebExchange
     ): Mono<ResponseEntity<Void>> {
         return exchange.getPrincipal<Principal>().flatMap { principal ->
-            addKeAccountShopItemCompetitorRequest.flatMap { request ->
+            addUzumAccountShopItemCompetitorRequest.flatMap { request ->
                 var productId = request.competitorProductId?.toLong()
                 var skuId = request.competitorSkuId?.toLong()
                 if (request.url != null) {
-                    val resolvedKeProduct = urlToProductResolver.resolve(request.url)
-                    if (resolvedKeProduct != null) {
-                        productId = resolvedKeProduct.productId.toLong()
-                        skuId = resolvedKeProduct.skuId.toLong()
+                    val resolvedUzumProduct = urlToProductResolver.resolve(request.url)
+                    if (resolvedUzumProduct != null) {
+                        productId = resolvedUzumProduct.productId.toLong()
+                        skuId = resolvedUzumProduct.skuId.toLong()
                     }
                 }
                 if (productId == null || skuId == null) {
@@ -101,18 +102,18 @@ class AccountsController(
                 ResponseEntity.status(HttpStatus.OK).build<Void>().toMono()
             }
         }.doOnError {
-            log.warn(it) { "Failed to add ke account shop item competitor. keAccountId=$id" }
+            log.warn(it) { "Failed to add ke account shop item competitor. uzumAccountId=$id" }
         }
     }
 
-    override fun addKeAccountShopItemPool(
+    override fun addUzumAccountShopItemPool(
         xRequestID: UUID,
         id: UUID,
-        addKeAccountShopItemPoolRequest: Mono<AddKeAccountShopItemPoolRequest>,
+        addUzumAccountShopItemPoolRequest: Mono<AddUzumAccountShopItemPoolRequest>,
         exchange: ServerWebExchange
     ): Mono<ResponseEntity<Void>> {
         return exchange.getPrincipal<Principal>().flatMap { principal ->
-            addKeAccountShopItemPoolRequest.flatMap { request ->
+            addUzumAccountShopItemPoolRequest.flatMap { request ->
                 try {
                     uzumAccountShopService.addShopItemIntoPool(principal.name, id, request.shopId, request.shopItemId)
                 } catch (e: AccountItemPoolLimitExceededException) {
@@ -123,42 +124,42 @@ class AccountsController(
                 ResponseEntity.status(HttpStatus.OK).build<Void>().toMono()
             }
         }.doOnError {
-            log.warn(it) { "Failed to add shop item into pool. keAccountId=$id" }
+            log.warn(it) { "Failed to add shop item into pool. uzumAccountId=$id" }
         }
     }
 
-    override fun deleteKeAccount(
+    override fun deleteUzumAccount(
         xRequestID: UUID,
         id: UUID,
         exchange: ServerWebExchange
     ): Mono<ResponseEntity<Void>> {
         return exchange.getPrincipal<Principal>().flatMap {
-            val removeKeAccountCount = uzumAccountService.removeKeAccount(it.name, id)
-            if (removeKeAccountCount > 0) {
+            val removeUzumAccountCount = uzumAccountService.removeUzumAccount(it.name, id)
+            if (removeUzumAccountCount > 0) {
                 return@flatMap ResponseEntity.ok().build<Void>().toMono()
             }
             ResponseEntity.notFound().build<Void>().toMono()
         }.doOnError {
-            log.warn(it) { "Failed to delete ke account. keAccountId=$id" }
+            log.warn(it) { "Failed to delete ke account. uzumAccountId=$id" }
         }
     }
 
-    override fun getKeAccount(
+    override fun getUzumAccount(
         xRequestID: UUID,
         id: UUID,
         exchange: ServerWebExchange
-    ): Mono<ResponseEntity<KeAccount>> {
+    ): Mono<ResponseEntity<UzumAccount>> {
         return exchange.getPrincipal<Principal>().flatMap {
-            val kazanExpressAccountEntity = uzumAccountService.getKeAccount(it.name, id)
-            val keAccount = conversionService.convert(kazanExpressAccountEntity, KeAccount::class.java)
+            val uzumAccountEntity = uzumAccountService.getUzumAccount(it.name, id)
+            val uzumAccount = conversionService.convert(uzumAccountEntity, UzumAccount::class.java)
 
-            ResponseEntity.ok(keAccount).toMono()
+            ResponseEntity.ok(uzumAccount).toMono()
         }.doOnError {
-            log.warn(it) { "Failed to get ke account. keAccountId=$id" }
+            log.warn(it) { "Failed to get ke account. uzumAccountId=$id" }
         }
     }
 
-    override fun getKeAccountCompetitorShopItems(
+    override fun getUzumAccountCompetitorShopItems(
         xRequestID: UUID,
         id: UUID,
         shopId: UUID,
@@ -168,16 +169,16 @@ class AccountsController(
         filter: String?,
         sort: MutableList<String>?,
         exchange: ServerWebExchange
-    ): Mono<ResponseEntity<Flux<KeAccountCompetitorShopItem>>> {
+    ): Mono<ResponseEntity<Flux<UzumAccountCompetitorShopItem>>> {
         return exchange.getPrincipal<Principal>().flatMap {
             val limit = limit ?: 10
             val offset = offset ?: 0
             val mapFields = mapOf(
-                "name" to StringTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.NAME),
-                "productId" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM_COMPETITOR.PRODUCT_ID),
-                "skuId" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM_COMPETITOR.SKU_ID),
-                "price" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.PRICE),
-                "availableAmount" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.AVAILABLE_AMOUNT),
+                "name" to StringTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.NAME),
+                "productId" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM_COMPETITOR.PRODUCT_ID),
+                "skuId" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM_COMPETITOR.SKU_ID),
+                "price" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.PRICE),
+                "availableAmount" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.AVAILABLE_AMOUNT),
             )
             val filterCondition = filter?.let {
                 FilterOperation.parse(filter, mapFields)
@@ -190,7 +191,7 @@ class AccountsController(
                 it.name, id, shopId, shopItemId, filterCondition, sortFields, limit.toLong(), offset.toLong()
             )
             if (shopItemCompetitors.isEmpty()) {
-                return@flatMap ResponseEntity.ok(emptyList<KeAccountCompetitorShopItem>().toFlux()).toMono()
+                return@flatMap ResponseEntity.ok(emptyList<UzumAccountCompetitorShopItem>().toFlux()).toMono()
             }
 
             val paginateEntity = shopItemCompetitors.first()
@@ -202,13 +203,13 @@ class AccountsController(
             ResponseEntity(shopItemCompetitors.map {
                 conversionService.convert(
                     it.item,
-                    KeAccountCompetitorShopItem::class.java
+                    UzumAccountCompetitorShopItem::class.java
                 )!!
             }.toFlux(), httpHeaders, HttpStatus.OK).toMono()
         }.doOnError {
             log.warn(it) {
                 "Failed to get ke account shop item competitors." +
-                        " keAccountId=$id;shopId=$shopId;shopItemId=$shopItemId;limit=$limit;offset=$offset;filter=$filter;sort=$sort"
+                        " uzumAccountId=$id;shopId=$shopId;shopItemId=$shopItemId;limit=$limit;offset=$offset;filter=$filter;sort=$sort"
             }
         }
     }
@@ -228,7 +229,7 @@ class AccountsController(
         }
     }
 
-    override fun getKeAccountShopItems(
+    override fun getUzumAccountShopItems(
         xRequestID: UUID,
         id: UUID,
         shopId: UUID,
@@ -237,24 +238,24 @@ class AccountsController(
         filter: String?,
         sort: MutableList<String>?,
         exchange: ServerWebExchange
-    ): Mono<ResponseEntity<Flux<KeAccountShopItem>>> {
+    ): Mono<ResponseEntity<Flux<UzumAccountShopItem>>> {
         return exchange.getPrincipal<Principal>().flatMap {
             val limit = limit ?: 10
             val offset = offset ?: 0
             val mapFields = mapOf(
-                "productId" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.PRODUCT_ID),
-                "skuId" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.SKU_ID),
-                "skuTitle" to StringTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.SKU_TITLE),
-                "name" to StringTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.NAME),
-                "photoKey" to StringTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.PHOTO_KEY),
-                "purchasePrice" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.PURCHASE_PRICE),
-                "price" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.PRICE),
-                "barCode" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.BARCODE),
-                "availableAmount" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.AVAILABLE_AMOUNT),
-                "minimumThreshold" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.MINIMUM_THRESHOLD),
-                "maximumThreshold" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.MAXIMUM_THRESHOLD),
-                "step" to IntegerTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.STEP),
-                "discount" to BigIntegerTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.DISCOUNT)
+                "productId" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.PRODUCT_ID),
+                "skuId" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.SKU_ID),
+                "skuTitle" to StringTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.SKU_TITLE),
+                "name" to StringTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.NAME),
+                "photoKey" to StringTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.PHOTO_KEY),
+                "purchasePrice" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.PURCHASE_PRICE),
+                "price" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.PRICE),
+                "barCode" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.BARCODE),
+                "availableAmount" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.AVAILABLE_AMOUNT),
+                "minimumThreshold" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.MINIMUM_THRESHOLD),
+                "maximumThreshold" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.MAXIMUM_THRESHOLD),
+                "step" to IntegerTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.STEP),
+                "discount" to BigIntegerTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.DISCOUNT)
             )
             val filterCondition = filter?.let {
                 FilterOperation.parse(filter, mapFields)
@@ -262,7 +263,7 @@ class AccountsController(
             val sortFields = if (sort != null) {
                 SortOperation.parse(sort, mapFields)
             } else null
-            val shopItemCompetitors = uzumAccountShopService.getKeAccountShopItems(
+            val shopItemCompetitors = uzumAccountShopService.getUzumAccountShopItems(
                 it.name,
                 id,
                 shopId,
@@ -272,7 +273,7 @@ class AccountsController(
                 offset.toLong()
             )
             if (shopItemCompetitors.isEmpty()) {
-                return@flatMap ResponseEntity.ok(emptyList<KeAccountShopItem>().toFlux()).toMono()
+                return@flatMap ResponseEntity.ok(emptyList<UzumAccountShopItem>().toFlux()).toMono()
             }
             val paginateEntity = shopItemCompetitors.first()
             val httpHeaders = HttpHeaders().apply {
@@ -280,16 +281,16 @@ class AccountsController(
                 add("Pagination-Limit", paginateEntity.limit.toString())
                 add("Pagination-Offset", paginateEntity.offset.toString())
             }
-            val keAccountShopItems =
+            val uzumAccountShopItems =
                 shopItemCompetitors.map { it.item }
-                    .map { conversionService.convert(it, KeAccountShopItem::class.java)!! }
-            ResponseEntity(keAccountShopItems.toFlux(), httpHeaders, HttpStatus.OK).toMono()
+                    .map { conversionService.convert(it, UzumAccountShopItem::class.java)!! }
+            ResponseEntity(uzumAccountShopItems.toFlux(), httpHeaders, HttpStatus.OK).toMono()
         }.doOnError {
-            log.warn(it) { "Failed to get ke account shop items. keAccountId=$id;shopId=$shopId;limit=$limit;offset=$offset;filter=$filter;sort=$sort" }
+            log.warn(it) { "Failed to get ke account shop items. uzumAccountId=$id;shopId=$shopId;limit=$limit;offset=$offset;filter=$filter;sort=$sort" }
         }
     }
 
-    override fun getKeAccountShopItemsPool(
+    override fun getUzumAccountShopItemsPool(
         xRequestID: UUID,
         id: UUID,
         shopId: UUID,
@@ -298,22 +299,22 @@ class AccountsController(
         filter: String?,
         sort: MutableList<String>?,
         exchange: ServerWebExchange
-    ): Mono<ResponseEntity<Flux<KeAccountShopItem>>> {
+    ): Mono<ResponseEntity<Flux<UzumAccountShopItem>>> {
         return exchange.getPrincipal<Principal>().flatMap {
             val limit = limit ?: 10
             val offset = offset ?: 0
             val mapFields = mapOf(
-                "productId" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.PRODUCT_ID),
-                "skuId" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.SKU_ID),
-                "name" to StringTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.NAME),
-                "photoKey" to StringTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.PHOTO_KEY),
-                "purchasePrice" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.PURCHASE_PRICE),
-                "price" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.PRICE),
-                "barCode" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.BARCODE),
-                "availableAmount" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.AVAILABLE_AMOUNT),
-                "minimumThreshold" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.MINIMUM_THRESHOLD),
-                "maximumThreshold" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.MAXIMUM_THRESHOLD),
-                "step" to IntegerTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.STEP)
+                "productId" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.PRODUCT_ID),
+                "skuId" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.SKU_ID),
+                "name" to StringTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.NAME),
+                "photoKey" to StringTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.PHOTO_KEY),
+                "purchasePrice" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.PURCHASE_PRICE),
+                "price" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.PRICE),
+                "barCode" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.BARCODE),
+                "availableAmount" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.AVAILABLE_AMOUNT),
+                "minimumThreshold" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.MINIMUM_THRESHOLD),
+                "maximumThreshold" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.MAXIMUM_THRESHOLD),
+                "step" to IntegerTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.STEP)
             )
             val filterCondition = filter?.let {
                 FilterOperation.parse(filter, mapFields)
@@ -332,7 +333,7 @@ class AccountsController(
                     offset.toLong()
                 )
             if (shopItemPaginateEntities.isEmpty()) {
-                return@flatMap ResponseEntity.ok(emptyList<KeAccountShopItem>().toFlux()).toMono()
+                return@flatMap ResponseEntity.ok(emptyList<UzumAccountShopItem>().toFlux()).toMono()
             }
             val paginateEntity = shopItemPaginateEntities.first()
             val httpHeaders = HttpHeaders().apply {
@@ -340,54 +341,54 @@ class AccountsController(
                 add("Pagination-Limit", paginateEntity.limit.toString())
                 add("Pagination-Offset", paginateEntity.offset.toString())
             }
-            val keAccountShopItems =
+            val uzumAccountShopItems =
                 shopItemPaginateEntities.map { it.item }
-                    .map { conversionService.convert(it, KeAccountShopItem::class.java)!! }
-            ResponseEntity(keAccountShopItems.toFlux(), httpHeaders, HttpStatus.OK).toMono()
+                    .map { conversionService.convert(it, UzumAccountShopItem::class.java)!! }
+            ResponseEntity(uzumAccountShopItems.toFlux(), httpHeaders, HttpStatus.OK).toMono()
         }.doOnError {
-            log.warn(it) { "Failed to ke account shop item pool. keAccountId=$id;shopId=$shopId;limit=$limit;offset=$offset;filter=$filter;sort=$sort" }
+            log.warn(it) { "Failed to ke account shop item pool. uzumAccountId=$id;shopId=$shopId;limit=$limit;offset=$offset;filter=$filter;sort=$sort" }
         }
     }
 
-    override fun getKeAccountShops(
+    override fun getUzumAccountShops(
         xRequestID: UUID,
         id: UUID,
         exchange: ServerWebExchange
-    ): Mono<ResponseEntity<Flux<KeAccountShop>>> {
+    ): Mono<ResponseEntity<Flux<UzumAccountShop>>> {
         return exchange.getPrincipal<Principal>().flatMap {
-            val kazanExpressAccountShopEntities = uzumAccountShopService.getKeAccountShops(it.name, id)
-            val keAccountShops =
-                kazanExpressAccountShopEntities.map { conversionService.convert(it, KeAccountShop::class.java)!! }
-            ResponseEntity.ok(keAccountShops.toFlux()).toMono()
+            val kazanExpressAccountShopEntities = uzumAccountShopService.getUzumAccountShops(it.name, id)
+            val uzumAccountShops =
+                kazanExpressAccountShopEntities.map { conversionService.convert(it, UzumAccountShop::class.java)!! }
+            ResponseEntity.ok(uzumAccountShops.toFlux()).toMono()
         }.doOnError {
             log.warn(it) { "Failed to get ke account shops" }
         }
     }
 
-    override fun getKeAccounts(
+    override fun getUzumAccounts(
         xRequestID: UUID,
         exchange: ServerWebExchange,
-    ): Mono<ResponseEntity<Flux<KeAccount>>> {
+    ): Mono<ResponseEntity<Flux<UzumAccount>>> {
         return exchange.getPrincipal<Principal>().flatMap {
-            val keAccounts = uzumAccountService.getKeAccounts(it.name)
-            val keAccountList = keAccounts.map { conversionService.convert(it, KeAccount::class.java)!! }
-            ResponseEntity.ok(keAccountList.toFlux()).toMono()
+            val uzumAccounts = uzumAccountService.getUzumAccounts(it.name)
+            val uzumAccountList = uzumAccounts.map { conversionService.convert(it, UzumAccount::class.java)!! }
+            ResponseEntity.ok(uzumAccountList.toFlux()).toMono()
         }.doOnError {
             log.warn(it) { "Failed to get ke accounts" }
         }
     }
 
-    override fun patchKeAccount(
+    override fun patchUzumAccount(
         xRequestID: UUID,
         id: UUID,
-        patchKeAccount: Mono<PatchKeAccount>,
+        patchUzumAccount: Mono<PatchUzumAccount>,
         exchange: ServerWebExchange
     ): Mono<ResponseEntity<Void>> {
         return exchange.getPrincipal<Principal>().flatMap { principal ->
-            patchKeAccount.flatMap { request ->
+            patchUzumAccount.flatMap { request ->
                 val response = try {
-                    uzumAccountService.editKeAccount(principal.name, id, request.login, request.password)
-                    uzumAccountService.initializeKeAccountJob(principal.name, id)
+                    uzumAccountService.editUzumAccount(principal.name, id, request.login, request.password)
+                    uzumAccountService.initializeUzumAccountJob(principal.name, id)
                     ResponseEntity.ok().build()
                 } catch (e: UserNotFoundException) {
                     ResponseEntity.notFound().build<Void>()
@@ -397,44 +398,44 @@ class AccountsController(
                 response.toMono()
             }
         }.doOnError {
-            log.warn(it) { "Failed to change ke account credentials. keAccountId=$id" }
+            log.warn(it) { "Failed to change ke account credentials. uzumAccountId=$id" }
         }
     }
 
-    override fun patchKeAccountMonitoringState(
+    override fun patchUzumAccountMonitoringState(
         xRequestID: UUID,
         id: UUID,
-        patchKeAccountMonitoringState: Mono<PatchKeAccountMonitoringState>,
+        patchUzumAccountMonitoringState: Mono<PatchUzumAccountMonitoringState>,
         exchange: ServerWebExchange
     ): Mono<ResponseEntity<Void>> {
         return exchange.getPrincipal<Principal>().flatMap { principal ->
-            patchKeAccountMonitoringState.flatMap { request ->
+            patchUzumAccountMonitoringState.flatMap { request ->
                 val monitorState = when (request.state) {
-                    PatchKeAccountMonitoringState.StateEnum.ACTIVATE -> MonitorState.active
-                    PatchKeAccountMonitoringState.StateEnum.SUSPEND -> MonitorState.suspended
+                    PatchUzumAccountMonitoringState.StateEnum.ACTIVATE -> MonitorState.active
+                    PatchUzumAccountMonitoringState.StateEnum.SUSPEND -> MonitorState.suspended
                     else -> return@flatMap Mono.error(IllegalArgumentException("Unknown request state: ${request.state}"))
                 }
-                val changeKeAccountMonitoringState =
-                    uzumAccountService.changeKeAccountMonitoringState(principal.name, id, monitorState)
-                return@flatMap if (changeKeAccountMonitoringState > 0) {
+                val changeUzumAccountMonitoringState =
+                    uzumAccountService.changeUzumAccountMonitoringState(principal.name, id, monitorState)
+                return@flatMap if (changeUzumAccountMonitoringState > 0) {
                     ResponseEntity.ok().build<Void>().toMono()
                 } else {
                     ResponseEntity.notFound().build<Void>().toMono()
                 }
             }
         }.doOnError {
-            log.warn(it) { "Failed to change ke account monitor state. keAccountId=$id" }
+            log.warn(it) { "Failed to change ke account monitor state. uzumAccountId=$id" }
         }
     }
 
-    override fun removeKeAccountShopItemCompetitor(
+    override fun removeUzumAccountShopItemCompetitor(
         xRequestID: UUID,
         id: UUID,
-        removeKeAccountShopItemCompetitorRequest: Mono<RemoveKeAccountShopItemCompetitorRequest>,
+        removeUzumAccountShopItemCompetitorRequest: Mono<RemoveUzumAccountShopItemCompetitorRequest>,
         exchange: ServerWebExchange
     ): Mono<ResponseEntity<Void>> {
         return exchange.getPrincipal<Principal>().flatMap { principal ->
-            removeKeAccountShopItemCompetitorRequest.flatMap { request ->
+            removeUzumAccountShopItemCompetitorRequest.flatMap { request ->
                 val removeShopItemCompetitorCount =
                     uzumAccountShopService.removeShopItemCompetitor(
                         principal.name,
@@ -449,18 +450,18 @@ class AccountsController(
                 }
             }
         }.doOnError {
-            log.warn(it) { "Failed to remove ke account shop item competitor. keAccountId=$id" }
+            log.warn(it) { "Failed to remove ke account shop item competitor. uzumAccountId=$id" }
         }
     }
 
-    override fun removeKeAccountShopItemFromPool(
+    override fun removeUzumAccountShopItemFromPool(
         xRequestID: UUID,
         id: UUID,
-        addKeAccountShopItemPoolRequest: Mono<AddKeAccountShopItemPoolRequest>,
+        addUzumAccountShopItemPoolRequest: Mono<AddUzumAccountShopItemPoolRequest>,
         exchange: ServerWebExchange
     ): Mono<ResponseEntity<Void>> {
         return exchange.getPrincipal<Principal>().flatMap { principal ->
-            addKeAccountShopItemPoolRequest.flatMap { request ->
+            addUzumAccountShopItemPoolRequest.flatMap { request ->
                 val removeShopItemFromPoolCount =
                     uzumAccountShopService.removeShopItemFromPool(principal.name, id, request.shopId, request.shopItemId)
                 if (removeShopItemFromPoolCount > 0) {
@@ -470,43 +471,43 @@ class AccountsController(
                 }
             }
         }.doOnError {
-            log.warn(it) { "Failed to remove ke account shop item from pool. keAccountId=$id" }
+            log.warn(it) { "Failed to remove ke account shop item from pool. uzumAccountId=$id" }
         }
     }
 
-    override fun updateKeAccountData(
+    override fun updateUzumAccountData(
         xRequestID: UUID,
         id: UUID,
         exchange: ServerWebExchange
     ): Mono<ResponseEntity<Void>> {
         return exchange.getPrincipal<Principal>().flatMap { principal ->
-            val result = updateKeAccountService.executeUpdateJob(principal.name, id)
+            val result = updateUzumAccountService.executeUpdateJob(principal.name, id)
             if (!result) {
                 ResponseEntity<Void>(HttpStatus.CONFLICT).toMono()
             } else {
                 ResponseEntity.ok().build<Void>().toMono()
             }
         }.doOnError {
-            log.warn(it) { "Exception during update ke account data. keAccountId=$id" }
+            log.warn(it) { "Exception during update ke account data. uzumAccountId=$id" }
         }
     }
 
-    override fun getKeAccountShopItem(
+    override fun getUzumAccountShopItem(
         xRequestID: UUID,
         id: UUID,
         shopItemId: UUID,
         exchange: ServerWebExchange
-    ): Mono<ResponseEntity<KeAccountShopItem>> {
+    ): Mono<ResponseEntity<UzumAccountShopItem>> {
         return exchange.getPrincipal<Principal>().flatMap { principal ->
-            val keAccountShopItem = uzumAccountShopService.getKeAccountShopItem(principal.name, id, shopItemId)
-                ?: return@flatMap ResponseEntity.notFound().build<KeAccountShopItem>().toMono()
-            ResponseEntity.ok(conversionService.convert(keAccountShopItem, KeAccountShopItem::class.java)).toMono()
+            val uzumAccountShopItem = uzumAccountShopService.getUzumAccountShopItem(principal.name, id, shopItemId)
+                ?: return@flatMap ResponseEntity.notFound().build<UzumAccountShopItem>().toMono()
+            ResponseEntity.ok(conversionService.convert(uzumAccountShopItem, UzumAccountShopItem::class.java)).toMono()
         }.doOnError {
-            log.warn(it) { "Failed to get ke account shop item. keAccountId=$id;shopItemId=$shopItemId" }
+            log.warn(it) { "Failed to get ke account shop item. uzumAccountId=$id;shopItemId=$shopItemId" }
         }
     }
 
-    override fun getKeAccountShopItemPriceChangeHistory(
+    override fun getUzumAccountShopItemPriceChangeHistory(
         xRequestID: UUID,
         id: UUID,
         limit: Int?,
@@ -514,18 +515,18 @@ class AccountsController(
         filter: String?,
         sort: MutableList<String>?,
         exchange: ServerWebExchange
-    ): Mono<ResponseEntity<Flux<KeAccountPriceChangeHistory>>> {
+    ): Mono<ResponseEntity<Flux<UzumAccountPriceChangeHistory>>> {
         return exchange.getPrincipal<Principal>().flatMap { principal ->
             val limit = limit ?: 10
             val offset = offset ?: 0
             val mapFields = mapOf(
-                "productId" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.PRODUCT_ID),
-                "skuId" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.SKU_ID),
-                "shopName" to StringTableFieldMapper(KE_ACCOUNT_SHOP.NAME),
-                "itemName" to StringTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.NAME),
-                "oldPrice" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM_PRICE_HISTORY.OLD_PRICE),
-                "newPrice" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM_PRICE_HISTORY.PRICE),
-                "barcode" to LongTableFieldMapper(KE_ACCOUNT_SHOP_ITEM.BARCODE),
+                "productId" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.PRODUCT_ID),
+                "skuId" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.SKU_ID),
+                "shopName" to StringTableFieldMapper(UZUM_ACCOUNT_SHOP.NAME),
+                "itemName" to StringTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.NAME),
+                "oldPrice" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM_PRICE_HISTORY.OLD_PRICE),
+                "newPrice" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM_PRICE_HISTORY.PRICE),
+                "barcode" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.BARCODE),
             )
             val filterCondition = filter?.let {
                 FilterOperation.parse(filter, mapFields)
@@ -534,7 +535,7 @@ class AccountsController(
                 SortOperation.parse(sort, mapFields)
             } else null
 
-            val shopItemPriceHistoryPaginateEntities = keShopItemPriceChangeRepository.findHistoryByKeAccountId(
+            val shopItemPriceHistoryPaginateEntities = uzumShopItemPriceHistoryRepository.findHistoryByUzumAccountId(
                 id,
                 filterCondition,
                 sortFields,
@@ -542,7 +543,7 @@ class AccountsController(
                 offset.toLong()
             )
             if (shopItemPriceHistoryPaginateEntities.isEmpty()) {
-                return@flatMap ResponseEntity(emptyList<KeAccountPriceChangeHistory>().toFlux(), HttpStatus.OK).toMono()
+                return@flatMap ResponseEntity(emptyList<UzumAccountPriceChangeHistory>().toFlux(), HttpStatus.OK).toMono()
             }
             val paginateEntity = shopItemPriceHistoryPaginateEntities.first()
             val httpHeaders = HttpHeaders().apply {
@@ -550,17 +551,17 @@ class AccountsController(
                 add("Pagination-Limit", paginateEntity.limit.toString())
                 add("Pagination-Offset", paginateEntity.offset.toString())
             }
-            val keAccountShopItems =
+            val uzumAccountShopItems =
                 shopItemPriceHistoryPaginateEntities.map { it.item }
-                    .map { conversionService.convert(it, KeAccountPriceChangeHistory::class.java)!! }
+                    .map { conversionService.convert(it, UzumAccountPriceChangeHistory::class.java)!! }
 
-            ResponseEntity(keAccountShopItems.toFlux(), httpHeaders, HttpStatus.OK).toMono()
+            ResponseEntity(uzumAccountShopItems.toFlux(), httpHeaders, HttpStatus.OK).toMono()
         }.doOnError {
-            log.warn(it) { "Failed to get ke account price history. keAccountId=$id;limit=$limit;offset=$offset;filter=$filter;sort=$sort" }
+            log.warn(it) { "Failed to get ke account price history. uzumAccountId=$id;limit=$limit;offset=$offset;filter=$filter;sort=$sort" }
         }
     }
 
-    override fun getKeAccountShopItemSimilar(
+    override fun getUzumAccountShopItemSimilar(
         xRequestID: UUID,
         id: UUID,
         shopId: UUID,
@@ -568,15 +569,15 @@ class AccountsController(
         exchange: ServerWebExchange
     ): Mono<ResponseEntity<Flux<SimilarItem>>> {
         return exchange.getPrincipal<Principal>().flatMap { principal ->
-            val keAccountShopItem = uzumAccountShopService.getKeAccountShopItem(principal.name, id, shopItemId)
+            val uzumAccountShopItem = uzumAccountShopService.getUzumAccountShopItem(principal.name, id, shopItemId)
                 ?: return@flatMap ResponseEntity.notFound().build<Flux<SimilarItem>>().toMono()
             val similarItems =
                 uzumShopItemService.findSimilarItems(
                     shopItemId,
-                    keAccountShopItem.productId,
-                    keAccountShopItem.skuId,
-                    keAccountShopItem.categoryId,
-                    keAccountShopItem.name
+                    uzumAccountShopItem.productId,
+                    uzumAccountShopItem.skuId,
+                    uzumAccountShopItem.categoryId,
+                    uzumAccountShopItem.name
                 ).map {
                     SimilarItem().apply {
                         this.productId = it.productId
@@ -590,20 +591,20 @@ class AccountsController(
         }.doOnError {
             log.warn(it) {
                 "Failed to get ke account item similar items" +
-                        ". keAccountId=$id;shopId=$shopId;shopItemId=$shopItemId"
+                        ". uzumAccountId=$id;shopId=$shopId;shopItemId=$shopItemId"
             }
         }
     }
 
-    override fun patchKeAccountInitializationState(
+    override fun patchUzumAccountInitializationState(
         xRequestID: UUID,
         id: UUID,
         exchange: ServerWebExchange
     ): Mono<ResponseEntity<Void>> {
         return exchange.getPrincipal<Principal>().flatMap { principal ->
             try {
-                val initializeKeAccountJob = uzumAccountService.initializeKeAccountJob(principal.name, id)
-                if (initializeKeAccountJob) {
+                val initializeUzumAccountJob = uzumAccountService.initializeUzumAccountJob(principal.name, id)
+                if (initializeUzumAccountJob) {
                     ResponseEntity.ok().build<Void>().toMono()
                 } else ResponseEntity<Void>(HttpStatus.CONFLICT).toMono()
             } catch (e: IllegalArgumentException) {
@@ -614,15 +615,15 @@ class AccountsController(
         }
     }
 
-    override fun patchKeAccountShopitem(
+    override fun patchUzumAccountShopitem(
         xRequestID: UUID,
         id: UUID,
         shopItemId: UUID,
-        patchKeAccountShopItem: Mono<PatchKeAccountShopItem>,
+        patchUzumAccountShopItem: Mono<PatchUzumAccountShopItem>,
         exchange: ServerWebExchange
-    ): Mono<ResponseEntity<KeAccountShopItem>> {
+    ): Mono<ResponseEntity<UzumAccountShopItem>> {
         return exchange.getPrincipal<Principal>().flatMap { principal ->
-            patchKeAccountShopItem.flatMap { request ->
+            patchUzumAccountShopItem.flatMap { request ->
                 val changeCount = uzumAccountShopService.changeShopItemPriceOptions(
                     id,
                     shopItemId,
@@ -632,10 +633,10 @@ class AccountsController(
                     request.discount
                 )
                 if (changeCount <= 0) {
-                    ResponseEntity.notFound().build<KeAccountShopItem>().toMono()
+                    ResponseEntity.notFound().build<UzumAccountShopItem>().toMono()
                 } else {
-                    val keAccountShopItem = uzumAccountShopService.getKeAccountShopItem(principal.name, id, shopItemId)
-                    val shopItem = conversionService.convert(keAccountShopItem, KeAccountShopItem::class.java)
+                    val uzumAccountShopItem = uzumAccountShopService.getUzumAccountShopItem(principal.name, id, shopItemId)
+                    val shopItem = conversionService.convert(uzumAccountShopItem, UzumAccountShopItem::class.java)
                     ResponseEntity.ok(shopItem).toMono()
                 }
             }

@@ -18,12 +18,12 @@ class RepairStuckStateJob : QuartzJobBean() {
         uzumAccountRepository.findAccountByUpdateStateInProgressAndLastUpdateLessThan(
             LocalDateTime.now().minusMinutes(60)
         ).forEach {
-            uzumAccountRepository.changeUpdateState(it.userId, it.keAccountEntity.id!!, UpdateState.error)
+            uzumAccountRepository.changeUpdateState(it.userId, it.uzumAccountEntity.id!!, UpdateState.error)
         }
         uzumAccountRepository.findAccountByInitializeStateInProgressAndLastUpdateLessThan(
             LocalDateTime.now().minusMinutes(60)
         ).forEach {
-            uzumAccountRepository.changeInitializeState(it.userId, it.keAccountEntity.id!!, InitializeState.error)
+            uzumAccountRepository.changeInitializeState(it.userId, it.uzumAccountEntity.id!!, InitializeState.error)
         }
     }
 }

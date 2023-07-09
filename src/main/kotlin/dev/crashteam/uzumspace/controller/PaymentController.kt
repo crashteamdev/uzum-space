@@ -1,9 +1,9 @@
 package dev.crashteam.uzumspace.controller
 
-import dev.crashteam.openapi.kerepricer.api.PaymentApi
-import dev.crashteam.openapi.kerepricer.model.CreateSubsriptionPayment201Response
-import dev.crashteam.openapi.kerepricer.model.CreateSubsriptionPaymentRequest
-import dev.crashteam.openapi.kerepricer.model.SubscriptionPlan
+import dev.crashteam.openapi.space.api.PaymentApi
+import dev.crashteam.openapi.space.model.CreateSubsriptionPayment201Response
+import dev.crashteam.openapi.space.model.CreateSubsriptionPaymentRequest
+import dev.crashteam.openapi.space.model.SubscriptionPlan
 import dev.crashteam.uzumspace.service.PaymentService
 import dev.crashteam.uzumspace.service.error.PaymentRestrictionException
 import org.springframework.http.HttpStatus

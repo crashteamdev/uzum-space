@@ -3,7 +3,7 @@ package dev.crashteam.uzumspace.job
 import dev.crashteam.uzumspace.config.properties.RepricerProperties
 import dev.crashteam.uzumspace.extensions.getApplicationContext
 import dev.crashteam.uzumspace.repository.postgre.UzumAccountRepository
-import dev.crashteam.uzumspace.service.UpdateKeAccountService
+import dev.crashteam.uzumspace.service.UpdateUzumAccountService
 import mu.KotlinLogging
 import org.quartz.DisallowConcurrentExecution
 import org.quartz.JobExecutionContext
@@ -18,12 +18,12 @@ class UpdateAccountDataMasterJob : QuartzJobBean() {
     override fun executeInternal(context: JobExecutionContext) {
         val applicationContext = context.getApplicationContext()
         val uzumAccountRepository = applicationContext.getBean(UzumAccountRepository::class.java)
-        val updateKeAccountService = applicationContext.getBean(UpdateKeAccountService::class.java)
+        val updateUzumAccountService = applicationContext.getBean(UpdateUzumAccountService::class.java)
         val repricerProperties = applicationContext.getBean(RepricerProperties::class.java)
-        val keAccountUpdateInProgressCount = uzumAccountRepository.findAccountUpdateInProgressCount()
+        val uzumAccountUpdateInProgressCount = uzumAccountRepository.findAccountUpdateInProgressCount()
 
-        if (keAccountUpdateInProgressCount >= (repricerProperties.maxUpdateInProgress ?: 3)) {
-            log.info { "Too mutch account update in progress - $keAccountUpdateInProgressCount" }
+        if (uzumAccountUpdateInProgressCount >= (repricerProperties.maxUpdateInProgress ?: 3)) {
+            log.info { "Too mutch account update in progress - $uzumAccountUpdateInProgressCount" }
             return
         }
 
@@ -31,19 +31,19 @@ class UpdateAccountDataMasterJob : QuartzJobBean() {
             uzumAccountRepository.findAccountUpdateNotInProgress(LocalDateTime.now().minusHours(6))
         log.info { "Execute update account job for ${kazanExpressAccountEntities.size} ke account" }
         for (kazanExpressAccountEntity in kazanExpressAccountEntities) {
-            val updateJob = updateKeAccountService.executeUpdateJob(
+            val updateJob = updateUzumAccountService.executeUpdateJob(
                 kazanExpressAccountEntity.userId,
-                kazanExpressAccountEntity.keAccountEntity.id!!
+                kazanExpressAccountEntity.uzumAccountEntity.id!!
             )
             if (!updateJob) {
                 log.info {
                     "Update ke account job already started for account" +
-                            " userId=${kazanExpressAccountEntity.userId}; keAccountId=${kazanExpressAccountEntity.keAccountEntity.id}"
+                            " userId=${kazanExpressAccountEntity.userId}; uzumAccountId=${kazanExpressAccountEntity.uzumAccountEntity.id}"
                 }
             } else {
                 log.info {
                     "Add update ke account job " +
-                            "userId=${kazanExpressAccountEntity.userId}; keAccountId=${kazanExpressAccountEntity.keAccountEntity.id}"
+                            "userId=${kazanExpressAccountEntity.userId}; uzumAccountId=${kazanExpressAccountEntity.uzumAccountEntity.id}"
                 }
             }
 

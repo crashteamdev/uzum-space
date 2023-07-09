@@ -1,15 +1,15 @@
 package dev.crashteam.uzumspace.service
 
 import dev.crashteam.uzumspace.ContainerConfiguration
-import dev.crashteam.uzumspace.client.uzum.KazanExpressWebClient
+import dev.crashteam.uzumspace.client.uzum.UzumWebClient
 import dev.crashteam.uzumspace.client.uzum.model.lk.*
 import dev.crashteam.uzumspace.db.model.enums.MonitorState
 import dev.crashteam.uzumspace.db.model.enums.SubscriptionPlan
 import dev.crashteam.uzumspace.db.model.enums.UpdateState
 import dev.crashteam.uzumspace.repository.postgre.*
 import dev.crashteam.uzumspace.repository.postgre.entity.AccountEntity
-import dev.crashteam.uzumspace.repository.postgre.entity.KazanExpressAccountEntity
-import dev.crashteam.uzumspace.repository.postgre.entity.KazanExpressAccountShopEntity
+import dev.crashteam.uzumspace.repository.postgre.entity.UzumAccountEntity
+import dev.crashteam.uzumspace.repository.postgre.entity.UzumAccountShopEntity
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -27,7 +27,7 @@ import java.util.*
 class UpdateUzumAccountServiceTest : ContainerConfiguration() {
 
     @Autowired
-    lateinit var updateKeAccountService: UpdateKeAccountService
+    lateinit var updateUzumAccountService: UpdateUzumAccountService
 
     @Autowired
     lateinit var accountRepository: AccountRepository
@@ -45,14 +45,14 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
     lateinit var subscriptionRepository: SubscriptionRepository
 
     @MockBean
-    lateinit var kazanExpressSecureService: KazanExpressSecureService
+    lateinit var uzumSecureService: UzumSecureService
 
     @MockBean
-    lateinit var kazanExpressWebClient: KazanExpressWebClient
+    lateinit var uzumWebClient: UzumWebClient
 
     val userId = UUID.randomUUID().toString()
 
-    val keAccountId = UUID.randomUUID()
+    val uzumAccountId = UUID.randomUUID()
 
     @BeforeEach
     internal fun setUp() {
@@ -66,8 +66,8 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
             )
         )
         val accountId = accountRepository.getAccount(userId)!!.id!!
-        val kazanExpressAccountEntity = KazanExpressAccountEntity(
-            id = keAccountId,
+        val kazanExpressAccountEntity = UzumAccountEntity(
+            id = uzumAccountId,
             accountId = accountId,
             externalAccountId = 14,
             name = "account name",
@@ -81,7 +81,7 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
     }
 
     @Test
-    fun `update ke account shops data with new data`() {
+    fun `update uzum account shops data with new data`() {
         // Given
         val firstAccountShop = AccountShop(
             id = 1,
@@ -95,22 +95,22 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
             urlTitle = "testUrl2",
             skuTitle = "testSkuTitle2"
         )
-        whenever(kazanExpressSecureService.getAccountShops(any(), any())).then {
+        whenever(uzumSecureService.getAccountShops(any(), any())).then {
             listOf(firstAccountShop, secondAccountShop)
         }
 
         // When
-        updateKeAccountService.updateShops(userId, keAccountId)
-        val keAccountShops = uzumAccountShopRepository.getKeAccountShops(keAccountId)
+        updateUzumAccountService.updateShops(userId, uzumAccountId)
+        val uzumAccountShops = uzumAccountShopRepository.getUzumAccountShops(uzumAccountId)
 
         // Then
-        assertEquals(2, keAccountShops.size)
-        assertTrue(keAccountShops.find { it.externalShopId == firstAccountShop.id } != null)
-        assertTrue(keAccountShops.find { it.externalShopId == secondAccountShop.id } != null)
+        assertEquals(2, uzumAccountShops.size)
+        assertTrue(uzumAccountShops.find { it.externalShopId == firstAccountShop.id } != null)
+        assertTrue(uzumAccountShops.find { it.externalShopId == secondAccountShop.id } != null)
     }
 
     @Test
-    fun `update ke account shops data with removing old shop`() {
+    fun `update uzum account shops data with removing old shop`() {
         // Given
         val firstAccountShop = AccountShop(
             id = 1,
@@ -125,48 +125,48 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
             skuTitle = "testSkuTitle2"
         )
         uzumAccountShopRepository.save(
-            KazanExpressAccountShopEntity(
+            UzumAccountShopEntity(
                 id = UUID.randomUUID(),
-                keAccountId = keAccountId,
+                uzumAccountId = uzumAccountId,
                 externalShopId = firstAccountShop.id,
                 name = firstAccountShop.shopTitle,
                 skuTitle = firstAccountShop.skuTitle
             )
         )
         uzumAccountShopRepository.save(
-            KazanExpressAccountShopEntity(
+            UzumAccountShopEntity(
                 id = UUID.randomUUID(),
-                keAccountId = keAccountId,
+                uzumAccountId = uzumAccountId,
                 externalShopId = secondAccountShop.id,
                 name = secondAccountShop.shopTitle,
                 skuTitle = secondAccountShop.skuTitle
             )
         )
-        whenever(kazanExpressSecureService.getAccountShops(any(), any())).then {
+        whenever(uzumSecureService.getAccountShops(any(), any())).then {
             listOf(firstAccountShop)
         }
 
         // When
-        updateKeAccountService.updateShops(userId, keAccountId)
-        val keAccountShops = uzumAccountShopRepository.getKeAccountShops(keAccountId)
+        updateUzumAccountService.updateShops(userId, uzumAccountId)
+        val uzumAccountShops = uzumAccountShopRepository.getUzumAccountShops(uzumAccountId)
 
         // Then
-        assertEquals(1, keAccountShops.size)
-        assertTrue(keAccountShops.find { it.externalShopId == firstAccountShop.id } != null)
+        assertEquals(1, uzumAccountShops.size)
+        assertTrue(uzumAccountShops.find { it.externalShopId == firstAccountShop.id } != null)
     }
 
     @Test
     fun `update shop items`() {
         // Given
-        val keAccountShopEntity = KazanExpressAccountShopEntity(
+        val uzumAccountShopEntity = UzumAccountShopEntity(
             id = UUID.randomUUID(),
-            keAccountId = keAccountId,
+            uzumAccountId = uzumAccountId,
             externalShopId = 1,
             name = "test",
             skuTitle = "TEST-SHOP"
         )
-        uzumAccountShopRepository.save(keAccountShopEntity)
-        val keShopItem = AccountShopItem(
+        uzumAccountShopRepository.save(uzumAccountShopEntity)
+        val uzumShopItem = AccountShopItem(
             productId = 4132,
             title = "test",
             skuTitle = "test",
@@ -192,28 +192,28 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
             image = "https://ke-images.servicecdn.ru/cbtma55i6omb975ssukg/t_product_240_low.jpg"
         )
         whenever(
-            kazanExpressSecureService.getAccountShopItems(any(), any(), any(), any())
-        ).then { listOf(keShopItem) }.then { emptyList<AccountShopItem>() }
+            uzumSecureService.getAccountShopItems(any(), any(), any(), any())
+        ).then { listOf(uzumShopItem) }.then { emptyList<AccountShopItem>() }
         val accountProductInfo = AccountProductInfo(
             category = AccountProductCategory(1, "test"),
             title = "test",
             skuTitle = "test"
         )
         whenever(
-            kazanExpressSecureService.getProductInfo(any(), any(), any(), any())
+            uzumSecureService.getProductInfo(any(), any(), any(), any())
         ).then { accountProductInfo }
         whenever(
-            kazanExpressWebClient.getProductInfo(any())
+            uzumWebClient.getProductInfo(any())
         ).then {
             null
         }
 
         // When
-        updateKeAccountService.updateShopItems(userId, keAccountId)
-        val shopItems = uzumAccountShopItemRepository.findShopItems(keAccountId, keAccountShopEntity.id!!)
+        updateUzumAccountService.updateShopItems(userId, uzumAccountId)
+        val shopItems = uzumAccountShopItemRepository.findShopItems(uzumAccountId, uzumAccountShopEntity.id!!)
 
         // Then
         assertEquals(1, shopItems.size)
-        assertTrue(shopItems.find { it.productId == keShopItem.productId } != null)
+        assertTrue(shopItems.find { it.productId == uzumShopItem.productId } != null)
     }
 }

@@ -40,9 +40,9 @@ class JobConfiguration(
         if (!schedulerFactoryBean.checkExists(TriggerKey(PAYMENT_TRIGGER_KEY))) {
             schedulerFactoryBean.scheduleJob(paymentMasterTrigger())
         }
-        schedulerFactoryBean.addJob(keAccountInitializeMasterJob(), true, true)
+        schedulerFactoryBean.addJob(uzumAccountInitializeMasterJob(), true, true)
         if (!schedulerFactoryBean.checkExists(TriggerKey(ACCOUNT_INITIALIZE_TRIGGER_KEY))) {
-            schedulerFactoryBean.scheduleJob(keAccountInitializeMasterTrigger())
+            schedulerFactoryBean.scheduleJob(uzumAccountInitializeMasterTrigger())
         }
         schedulerFactoryBean.addJob(repairStuckStateJob(), true, true)
         if (!schedulerFactoryBean.checkExists(TriggerKey(REPAIR_STUCK_STATE_TRIGGER_KEY))) {
@@ -117,7 +117,7 @@ class JobConfiguration(
             .build()
     }
 
-    fun keAccountInitializeMasterJob(): JobDetailImpl {
+    fun uzumAccountInitializeMasterJob(): JobDetailImpl {
         val jobDetail = JobDetailImpl()
         jobDetail.key = JobKey("master-account-initialize-job")
         jobDetail.jobClass = UzumAccountInitializeMasterJob::class.java
@@ -125,9 +125,9 @@ class JobConfiguration(
         return jobDetail
     }
 
-    fun keAccountInitializeMasterTrigger(): CronTrigger {
+    fun uzumAccountInitializeMasterTrigger(): CronTrigger {
         return TriggerBuilder.newTrigger()
-            .forJob(keAccountInitializeMasterJob())
+            .forJob(uzumAccountInitializeMasterJob())
             .withIdentity(ACCOUNT_INITIALIZE_TRIGGER_KEY)
             .withPriority(Int.MAX_VALUE)
             .withSchedule(CronScheduleBuilder.cronSchedule(repricerProperties.accountInitializeCron))

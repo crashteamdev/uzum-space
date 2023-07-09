@@ -4,8 +4,8 @@ import java.time.LocalDateTime
 import java.util.*
 
 data class UzumShopItemPriceHistoryEntityJointItemAndShopEntity(
-    val keAccountShopItemId: UUID,
-    val keAccountShopItemCompetitorId: UUID,
+    val uzumAccountShopItemId: UUID,
+    val uzumAccountShopItemCompetitorId: UUID,
     val productId: Long,
     val skuId: Long,
     val shopName: String,

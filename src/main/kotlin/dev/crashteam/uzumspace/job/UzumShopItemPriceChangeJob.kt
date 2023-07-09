@@ -16,10 +16,10 @@ class UzumShopItemPriceChangeJob : QuartzJobBean() {
         val applicationContext = context.getApplicationContext()
         val priceChangeService = applicationContext.getBean(PriceChangeService::class.java)
         val uzumAccountRepository = applicationContext.getBean(UzumAccountRepository::class.java)
-        val keAccountId = context.jobDetail.jobDataMap["keAccountId"] as? UUID
-            ?: throw IllegalStateException("keAccountId can't be null")
-        val kazanExpressAccountEntity = uzumAccountRepository.getUzumAccount(keAccountId)!!
-        log.info { "Check account items price for userId=${kazanExpressAccountEntity.userId}; keAccountId=$keAccountId" }
-        priceChangeService.recalculateUserShopItemPrice(kazanExpressAccountEntity.userId, keAccountId)
+        val uzumAccountId = context.jobDetail.jobDataMap["uzumAccountId"] as? UUID
+            ?: throw IllegalStateException("uzumAccountId can't be null")
+        val kazanExpressAccountEntity = uzumAccountRepository.getUzumAccount(uzumAccountId)!!
+        log.info { "Check account items price for userId=${kazanExpressAccountEntity.userId}; uzumAccountId=$uzumAccountId" }
+        priceChangeService.recalculateUserShopItemPrice(kazanExpressAccountEntity.userId, uzumAccountId)
     }
 }

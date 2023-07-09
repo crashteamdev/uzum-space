@@ -1,7 +1,7 @@
 package dev.crashteam.uzumspace.controller
 
-import dev.crashteam.openapi.kerepricer.api.SimilarApi
-import dev.crashteam.openapi.kerepricer.model.SimilarItem
+import dev.crashteam.openapi.space.api.SimilarApi
+import dev.crashteam.openapi.space.model.SimilarItem
 import dev.crashteam.uzumspace.service.UzumShopItemService
 import mu.KotlinLogging
 import org.springframework.http.ResponseEntity

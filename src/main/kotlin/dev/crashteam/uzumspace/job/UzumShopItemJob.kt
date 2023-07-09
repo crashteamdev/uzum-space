@@ -34,7 +34,7 @@ class UzumShopItemJob : QuartzJobBean() {
                     return@mapNotNull null // skip bad product
                 }
                 val productData = productInfo.payload.data
-                uzumShopItemService.addShopItemFromKeData(productData)
+                uzumShopItemService.addShopItemFromUzumData(productData)
             }
             offset += 48
             context.jobDetail.jobDataMap["offset"] = offset

@@ -46,7 +46,7 @@ CREATE TABLE account
 
 CREATE UNIQUE INDEX account_user_id_idx ON account (user_id);
 
-CREATE TABLE ke_account
+CREATE TABLE uzum_account
 (
     id                           uuid PRIMARY KEY,
     account_id                   BIGINT            NOT NULL REFERENCES account ON DELETE CASCADE,
@@ -63,27 +63,27 @@ CREATE TABLE ke_account
     initialize_state_last_update TIMESTAMP WITHOUT TIME ZONE
 );
 
-CREATE UNIQUE INDEX ke_account_account_id_idx ON ke_account (account_id, external_account_id);
+CREATE UNIQUE INDEX uzum_account_account_id_idx ON uzum_account (account_id, external_account_id);
 
-CREATE UNIQUE INDEX ke_account_account_id_login_idx ON ke_account (account_id, login);
+CREATE UNIQUE INDEX uzum_account_account_id_login_idx ON uzum_account (account_id, login);
 
-CREATE TABLE ke_account_shop
+CREATE TABLE uzum_account_shop
 (
     id               uuid PRIMARY KEY,
-    ke_account_id    uuid              NOT NULL,
+    uzum_account_id    uuid              NOT NULL,
     external_shop_id BIGINT            NOT NULL,
     name             CHARACTER VARYING NOT NULL,
 
-    CONSTRAINT fk_ke_account_shop_ke_account FOREIGN KEY (ke_account_id) REFERENCES ke_account (id) ON DELETE CASCADE
+    CONSTRAINT fk_uzum_account_shop_uzum_account FOREIGN KEY (uzum_account_id) REFERENCES uzum_account (id) ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX ke_account_shop_ke_account_id_external_shop_id_idx ON ke_account_shop (ke_account_id, external_shop_id);
+CREATE UNIQUE INDEX uzum_account_shop_uzum_account_id_external_shop_id_idx ON uzum_account_shop (uzum_account_id, external_shop_id);
 
-CREATE TABLE ke_account_shop_item
+CREATE TABLE uzum_account_shop_item
 (
     id                 uuid PRIMARY KEY,
-    ke_account_id      uuid                        NOT NULL,
-    ke_account_shop_id uuid                        NOT NULL,
+    uzum_account_id      uuid                        NOT NULL,
+    uzum_account_shop_id uuid                        NOT NULL,
     category_id        BIGINT                      NOT NULL,
     product_id         BIGINT                      NOT NULL,
     sku_id             BIGINT                      NOT NULL,
@@ -101,46 +101,46 @@ CREATE TABLE ke_account_shop_item
     discount           DECIMAL(100),
     last_update        TIMESTAMP WITHOUT TIME ZONE NOT NULL,
 
-    CONSTRAINT fk_ke_account_shop_item_ke_account FOREIGN KEY (ke_account_id) REFERENCES ke_account (id) ON DELETE CASCADE,
-    CONSTRAINT fk_ke_account_shop_ke_account FOREIGN KEY (ke_account_shop_id) REFERENCES ke_account_shop (id) ON DELETE CASCADE
+    CONSTRAINT fk_uzum_account_shop_item_uzum_account FOREIGN KEY (uzum_account_id) REFERENCES uzum_account (id) ON DELETE CASCADE,
+    CONSTRAINT fk_uzum_account_shop_uzum_account FOREIGN KEY (uzum_account_shop_id) REFERENCES uzum_account_shop (id) ON DELETE CASCADE
 );
 
-CREATE UNIQUE INDEX ke_account_shop_item_account_id_account_shop_id_idx ON
-    ke_account_shop_item (ke_account_id, ke_account_shop_id, product_id, sku_id);
+CREATE UNIQUE INDEX uzum_account_shop_item_account_id_account_shop_id_idx ON
+    uzum_account_shop_item (uzum_account_id, uzum_account_shop_id, product_id, sku_id);
 
-CREATE TABLE ke_account_shop_item_competitor
+CREATE TABLE uzum_account_shop_item_competitor
 (
     id                      uuid PRIMARY KEY,
-    ke_account_shop_item_id uuid,
+    uzum_account_shop_item_id uuid,
     product_id              BIGINT NOT NULL,
     sku_id                  BIGINT NOT NULL,
 
-    CONSTRAINT fk_ke_account_shop_item_competitor_ke_account_shop_item
-        FOREIGN KEY (ke_account_shop_item_id) REFERENCES ke_account_shop_item (id)
+    CONSTRAINT fk_uzum_account_shop_item_competitor_uzum_account_shop_item
+        FOREIGN KEY (uzum_account_shop_item_id) REFERENCES uzum_account_shop_item (id)
 );
 
-CREATE UNIQUE INDEX ke_account_shop_item_id_product_id_sku_id_idx ON
-    ke_account_shop_item_competitor (ke_account_shop_item_id, product_id, sku_id);
+CREATE UNIQUE INDEX uzum_account_shop_item_id_product_id_sku_id_idx ON
+    uzum_account_shop_item_competitor (uzum_account_shop_item_id, product_id, sku_id);
 
-CREATE TABLE ke_account_shop_item_pool
+CREATE TABLE uzum_account_shop_item_pool
 (
-    ke_account_shop_item_id uuid PRIMARY KEY REFERENCES ke_account_shop_item ON DELETE CASCADE,
+    uzum_account_shop_item_id uuid PRIMARY KEY REFERENCES uzum_account_shop_item ON DELETE CASCADE,
     last_check              TIMESTAMP WITHOUT TIME ZONE
 );
 
-CREATE TABLE ke_account_shop_item_price_history
+CREATE TABLE uzum_account_shop_item_price_history
 (
-    ke_account_shop_item_id            uuid REFERENCES ke_account_shop_item ON DELETE CASCADE,
-    ke_account_shop_item_competitor_id uuid REFERENCES ke_account_shop_item_competitor ON DELETE CASCADE,
+    uzum_account_shop_item_id            uuid REFERENCES uzum_account_shop_item ON DELETE CASCADE,
+    uzum_account_shop_item_competitor_id uuid REFERENCES uzum_account_shop_item_competitor ON DELETE CASCADE,
     change_time                        TIMESTAMP WITHOUT TIME ZONE,
     old_price                          BIGINT NOT NULL,
     price                              BIGINT NOT NULL,
 
-    CONSTRAINT fk_ke_account_shop_item_price_history_item_competitor FOREIGN KEY
-        (ke_account_shop_item_competitor_id) REFERENCES ke_account_shop_item_competitor (id)
+    CONSTRAINT fk_uzum_account_shop_item_price_history_item_competitor FOREIGN KEY
+        (uzum_account_shop_item_competitor_id) REFERENCES uzum_account_shop_item_competitor (id)
 );
 
-CREATE TABLE ke_shop_item
+CREATE TABLE uzum_shop_item
 (
     product_id           BIGINT            NOT NULL,
     sku_id               BIGINT            NOT NULL,
@@ -155,8 +155,8 @@ CREATE TABLE ke_shop_item
     PRIMARY KEY (product_id, sku_id)
 );
 
-CREATE INDEX ke_shop_item_avg_hash_index ON ke_shop_item (avg_hash_fingerprint);
-CREATE INDEX ke_shop_item_name_idx ON ke_shop_item USING gist (name gist_trgm_ops);
+CREATE INDEX uzum_shop_item_avg_hash_index ON uzum_shop_item (avg_hash_fingerprint);
+CREATE INDEX uzum_shop_item_name_idx ON uzum_shop_item USING gist (name gist_trgm_ops);
 
 --changeset vitaxa:create-qrtz-schema
 DROP TABLE IF EXISTS QRTZ_FIRED_TRIGGERS;

@@ -4,7 +4,7 @@ import dev.crashteam.uzumspace.db.model.enums.InitializeState
 import dev.crashteam.uzumspace.db.model.enums.MonitorState
 import dev.crashteam.uzumspace.db.model.enums.UpdateState
 import dev.crashteam.uzumspace.db.model.tables.Account.ACCOUNT
-import dev.crashteam.uzumspace.db.model.tables.KeAccount.KE_ACCOUNT
+import dev.crashteam.uzumspace.db.model.tables.UzumAccount.UZUM_ACCOUNT
 import dev.crashteam.uzumspace.repository.postgre.entity.UzumAccountEntity
 import dev.crashteam.uzumspace.repository.postgre.entity.UzumAccountEntityJoinAccountEntity
 import dev.crashteam.uzumspace.repository.postgre.mapper.RecordToUzumAccountEntityJoinAccountEntityMapper
@@ -21,8 +21,8 @@ class UzumAccountRepository(
     private val recordToUzumAccountEntityJoinAccountEntityMapper: RecordToUzumAccountEntityJoinAccountEntityMapper
 ) {
 
-    fun save(keAccountEntity: UzumAccountEntity): UUID? {
-        val k = KE_ACCOUNT
+    fun save(uzumAccountEntity: UzumAccountEntity): UUID? {
+        val k = UZUM_ACCOUNT
         return dsl.insertInto(
             k,
             k.ID,
@@ -35,25 +35,25 @@ class UzumAccountRepository(
             k.LAST_UPDATE
         )
             .values(
-                keAccountEntity.id,
-                keAccountEntity.accountId,
-                keAccountEntity.externalAccountId,
-                keAccountEntity.name,
-                keAccountEntity.email,
-                keAccountEntity.login,
-                keAccountEntity.password,
-                keAccountEntity.lastUpdate
+                uzumAccountEntity.id,
+                uzumAccountEntity.accountId,
+                uzumAccountEntity.externalAccountId,
+                uzumAccountEntity.name,
+                uzumAccountEntity.email,
+                uzumAccountEntity.login,
+                uzumAccountEntity.password,
+                uzumAccountEntity.lastUpdate
             )
             .onDuplicateKeyUpdate()
             .set(
                 mapOf(
-                    k.ACCOUNT_ID to keAccountEntity.accountId,
-                    k.EXTERNAL_ACCOUNT_ID to keAccountEntity.externalAccountId,
-                    k.NAME to keAccountEntity.name,
-                    k.EMAIL to keAccountEntity.email,
-                    k.LOGIN to keAccountEntity.login,
-                    k.PASSWORD to keAccountEntity.password,
-                    k.LAST_UPDATE to keAccountEntity.lastUpdate,
+                    k.ACCOUNT_ID to uzumAccountEntity.accountId,
+                    k.EXTERNAL_ACCOUNT_ID to uzumAccountEntity.externalAccountId,
+                    k.NAME to uzumAccountEntity.name,
+                    k.EMAIL to uzumAccountEntity.email,
+                    k.LOGIN to uzumAccountEntity.login,
+                    k.PASSWORD to uzumAccountEntity.password,
+                    k.LAST_UPDATE to uzumAccountEntity.lastUpdate,
                 )
             )
             .returningResult(k.ID)
@@ -62,7 +62,7 @@ class UzumAccountRepository(
 
     fun getUzumAccounts(userId: String): List<UzumAccountEntity> {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
+        val k = UZUM_ACCOUNT
         val records = dsl.select()
             .from(k.join(a).on(a.ID.eq(k.ACCOUNT_ID)))
             .where(a.USER_ID.eq(userId))
@@ -72,41 +72,41 @@ class UzumAccountRepository(
 
     fun getUzumAccountsCount(userId: String): Int {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
+        val k = UZUM_ACCOUNT
         return dsl.selectCount()
             .from(k.join(a).on(a.ID.eq(k.ACCOUNT_ID)))
             .where(a.USER_ID.eq(userId))
             .fetchOne(0, Int::class.java) ?: 0
     }
 
-    fun getUzumAccount(userId: String, keAccountId: UUID): UzumAccountEntity? {
+    fun getUzumAccount(userId: String, uzumAccountId: UUID): UzumAccountEntity? {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
+        val k = UZUM_ACCOUNT
         val record = dsl.select()
             .from(k.join(a).on(a.ID.eq(k.ACCOUNT_ID)))
-            .where(a.USER_ID.eq(userId).and(k.ID.eq(keAccountId)))
+            .where(a.USER_ID.eq(userId).and(k.ID.eq(uzumAccountId)))
             .fetchOne() ?: return null
         return recordToUzumAccountEntityMapper.convert(record)
     }
 
-    fun getUzumAccount(keAccountId: UUID): UzumAccountEntityJoinAccountEntity? {
+    fun getUzumAccount(uzumAccountId: UUID): UzumAccountEntityJoinAccountEntity? {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
+        val k = UZUM_ACCOUNT
         val record = dsl.select()
             .from(k.join(a).on(a.ID.eq(k.ACCOUNT_ID)))
-            .where(k.ID.eq(keAccountId))
+            .where(k.ID.eq(uzumAccountId))
             .fetchOne() ?: return null
         return recordToUzumAccountEntityJoinAccountEntityMapper.convert(record)
     }
 
     fun changeUpdateState(
         userId: String,
-        keAccountId: UUID,
+        uzumAccountId: UUID,
         updateState: UpdateState,
         lastUpdate: LocalDateTime? = null
     ): Int {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
+        val k = UZUM_ACCOUNT
         val updateStep = dsl.update(k)
             .set(
                 mapOf(
@@ -117,29 +117,29 @@ class UzumAccountRepository(
         if (lastUpdate != null) {
             updateStep.set(k.LAST_UPDATE, lastUpdate)
         }
-        return updateStep.from(a).where(a.USER_ID.eq(userId).and(k.ID.eq(keAccountId))).execute()
+        return updateStep.from(a).where(a.USER_ID.eq(userId).and(k.ID.eq(uzumAccountId))).execute()
     }
 
     fun changeMonitorState(
         userId: String,
-        keAccountId: UUID,
+        uzumAccountId: UUID,
         monitorState: MonitorState,
     ): Int {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
+        val k = UZUM_ACCOUNT
         return dsl.update(k)
             .set(k.MONITOR_STATE, monitorState)
             .from(a)
-            .where(a.USER_ID.eq(userId).and(k.ID.eq(keAccountId))).execute()
+            .where(a.USER_ID.eq(userId).and(k.ID.eq(uzumAccountId))).execute()
     }
 
     fun changeInitializeState(
         userId: String,
-        keAccountId: UUID,
+        uzumAccountId: UUID,
         initializeState: InitializeState
     ): Int {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
+        val k = UZUM_ACCOUNT
         return dsl.update(k)
             .set(
                 mapOf(
@@ -148,16 +148,16 @@ class UzumAccountRepository(
                 )
             )
             .from(a)
-            .where(a.USER_ID.eq(userId).and(k.ID.eq(keAccountId))).execute()
+            .where(a.USER_ID.eq(userId).and(k.ID.eq(uzumAccountId))).execute()
     }
 
-    fun removeUzumAccount(userId: String, keAccountId: UUID): Int {
+    fun removeUzumAccount(userId: String, uzumAccountId: UUID): Int {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
+        val k = UZUM_ACCOUNT
         return dsl.deleteFrom(k)
             .using(a)
             .where(
-                k.ID.eq(keAccountId).and(a.USER_ID.eq(userId))
+                k.ID.eq(uzumAccountId).and(a.USER_ID.eq(userId))
             )
             .execute()
     }
@@ -166,7 +166,7 @@ class UzumAccountRepository(
         lastUpdate: LocalDateTime
     ): MutableList<UzumAccountEntityJoinAccountEntity> {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
+        val k = UZUM_ACCOUNT
         val records = dsl.selectFrom(k.join(a).on(a.ID.eq(k.ACCOUNT_ID)))
             .where(
                 k.INITIALIZE_STATE.eq(InitializeState.finished)
@@ -179,7 +179,7 @@ class UzumAccountRepository(
     }
 
     fun findAccountUpdateInProgressCount(): Int {
-        val k = KE_ACCOUNT
+        val k = UZUM_ACCOUNT
         return dsl.selectCount()
             .from(k)
             .where(k.UPDATE_STATE.eq(UpdateState.in_progress))
@@ -190,7 +190,7 @@ class UzumAccountRepository(
         updateStateLastUpdate: LocalDateTime
     ): List<UzumAccountEntityJoinAccountEntity> {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
+        val k = UZUM_ACCOUNT
         val records = dsl.selectFrom(k.join(a).on(a.ID.eq(k.ACCOUNT_ID)))
             .where(
                 k.UPDATE_STATE.eq(UpdateState.in_progress)
@@ -202,7 +202,7 @@ class UzumAccountRepository(
 
     fun findAccountWhereMonitorActiveWithValidSubscription(): List<UzumAccountEntity> {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
+        val k = UZUM_ACCOUNT
         val records = dsl.selectFrom(k.join(a).on(a.ID.eq(k.ACCOUNT_ID)))
             .where(
                 k.MONITOR_STATE.eq(MonitorState.active).and(a.SUBSCRIPTION_VALID_UNTIL.greaterThan(LocalDateTime.now()))
@@ -214,7 +214,7 @@ class UzumAccountRepository(
 
     fun findNotInitializedAccount(): List<UzumAccountEntityJoinAccountEntity> {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
+        val k = UZUM_ACCOUNT
         val records = dsl.selectFrom(k.join(a).on(a.ID.eq(k.ACCOUNT_ID)))
             .where(k.INITIALIZE_STATE.eq(InitializeState.not_started))
             .fetch()
@@ -225,7 +225,7 @@ class UzumAccountRepository(
         initializeStateLastUpdate: LocalDateTime
     ): List<UzumAccountEntityJoinAccountEntity> {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
+        val k = UZUM_ACCOUNT
         val records = dsl.selectFrom(k.join(a).on(a.ID.eq(k.ACCOUNT_ID)))
             .where(
                 k.INITIALIZE_STATE.eq(InitializeState.in_progress)

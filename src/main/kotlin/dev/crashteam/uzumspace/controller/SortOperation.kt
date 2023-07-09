@@ -1,6 +1,7 @@
 package dev.crashteam.uzumspace.controller
 
 import dev.crashteam.uzumspace.repository.postgre.SortType
+import org.jooq.Record
 import org.jooq.TableField
 
 object SortOperation {

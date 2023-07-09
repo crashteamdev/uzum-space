@@ -17,10 +17,10 @@ class UzumAccountInitializeMasterJob : QuartzJobBean() {
         val applicationContext = context.getApplicationContext()
         val uzumAccountRepository = applicationContext.getBean(UzumAccountRepository::class.java)
         val uzumAccountService = applicationContext.getBean(UzumAccountService::class.java)
-        val keAccounts = uzumAccountRepository.findNotInitializedAccount()
-        for (keAccount in keAccounts) {
+        val uzumAccounts = uzumAccountRepository.findNotInitializedAccount()
+        for (uzumAccount in uzumAccounts) {
             val initializeKeAccount =
-                uzumAccountService.initializeKeAccountJob(keAccount.userId, keAccount.keAccountEntity.id!!)
+                uzumAccountService.initializeUzumAccountJob(uzumAccount.userId, uzumAccount.uzumAccountEntity.id!!)
             if (initializeKeAccount) {
                 log.info { "KE account initialization job successfully created" }
             } else {

@@ -1,10 +1,10 @@
 package dev.crashteam.uzumspace.repository.postgre
 
-import dev.crashteam.openapi.kerepricer.model.AddStrategyRequest
-import dev.crashteam.openapi.kerepricer.model.PatchStrategy
-import dev.crashteam.openapi.kerepricer.model.Strategy
+import dev.crashteam.openapi.space.model.AddStrategyRequest
+import dev.crashteam.openapi.space.model.PatchStrategy
+import dev.crashteam.openapi.space.model.Strategy
 import dev.crashteam.uzumspace.db.model.enums.StrategyType
-import dev.crashteam.uzumspace.db.model.tables.KeAccountShopItemStrategy.KE_ACCOUNT_SHOP_ITEM_STRATEGY
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItemStrategy.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY
 import dev.crashteam.uzumspace.db.model.tables.StrategyOption.STRATEGY_OPTION
 import dev.crashteam.uzumspace.repository.postgre.entity.strategy.UzumAccountShopItemStrategyEntity
 import dev.crashteam.uzumspace.repository.postgre.mapper.RecordToUzumAccountShopItemStrategyEntityMapper
@@ -21,7 +21,7 @@ class UzumAccountShopItemStrategyRepository(
 
     @Transactional
     fun save(strategyRequest: AddStrategyRequest): Long {
-        val itemStrategy = KE_ACCOUNT_SHOP_ITEM_STRATEGY
+        val itemStrategy = UZUM_ACCOUNT_SHOP_ITEM_STRATEGY
         val strategyType = StrategyType.valueOf(strategyRequest.strategy.strategyType)
 
         val optionId = saveOption(strategyRequest.strategy)
@@ -40,7 +40,7 @@ class UzumAccountShopItemStrategyRepository(
     @Transactional
     fun update(shopItemStrategyId: Long, patchStrategy: PatchStrategy): Int {
         val strategyType = StrategyType.valueOf(patchStrategy.strategy.strategyType)
-        val itemStrategy = KE_ACCOUNT_SHOP_ITEM_STRATEGY
+        val itemStrategy = UZUM_ACCOUNT_SHOP_ITEM_STRATEGY
         val strategyOptionId = dsl.update(itemStrategy)
             .set(itemStrategy.STRATEGY_TYPE, strategyType)
             .where(itemStrategy.ID.eq(shopItemStrategyId))
@@ -62,7 +62,7 @@ class UzumAccountShopItemStrategyRepository(
     }
 
     fun findById(id: Long): UzumAccountShopItemStrategyEntity? {
-        val i = KE_ACCOUNT_SHOP_ITEM_STRATEGY
+        val i = UZUM_ACCOUNT_SHOP_ITEM_STRATEGY
         val o = STRATEGY_OPTION
         return dsl.select()
             .from(i.leftJoin(o).on(i.STRATEGY_OPTION_ID.eq(o.ID)))
@@ -71,7 +71,7 @@ class UzumAccountShopItemStrategyRepository(
     }
 
     fun deleteById(id: Long): Int {
-        val i = KE_ACCOUNT_SHOP_ITEM_STRATEGY
+        val i = UZUM_ACCOUNT_SHOP_ITEM_STRATEGY
         return dsl.deleteFrom(i).where(i.ID.eq(id)).execute();
     }
 }

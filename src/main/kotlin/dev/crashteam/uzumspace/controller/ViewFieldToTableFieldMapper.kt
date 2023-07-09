@@ -3,6 +3,7 @@ package dev.crashteam.uzumspace.controller
 import org.jooq.TableField
 import java.math.BigInteger
 import java.util.*
+import org.jooq.Record
 
 interface ViewFieldToTableFieldMapper<R : Record, T> {
     fun tableField(): TableField<R, T>

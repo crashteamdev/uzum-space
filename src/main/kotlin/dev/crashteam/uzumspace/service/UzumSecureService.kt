@@ -19,46 +19,46 @@ class UzumSecureService(
     private val passwordEncryptor: PasswordEncryptor,
 ) {
 
-    fun getAccountShops(userId: String, keAccountId: UUID): List<AccountShop> {
-        val userToken = authUser(userId, keAccountId)
+    fun getAccountShops(userId: String, uzumAccountId: UUID): List<AccountShop> {
+        val userToken = authUser(userId, uzumAccountId)
         return kazanExpressClient.getAccountShops(userId, userToken)
     }
 
-    fun getAccountShopItems(userId: String, keAccountId: UUID, shopId: Long, page: Int): List<AccountShopItem> {
-        val userToken = authUser(userId, keAccountId)
+    fun getAccountShopItems(userId: String, uzumAccountId: UUID, shopId: Long, page: Int): List<AccountShopItem> {
+        val userToken = authUser(userId, uzumAccountId)
         return kazanExpressClient.getAccountShopItems(userId, userToken, shopId, page)
     }
 
-    fun getProductInfo(userId: String, keAccountId: UUID, shopId: Long, productId: Long): AccountProductInfo {
-        val userToken = authUser(userId, keAccountId)
+    fun getProductInfo(userId: String, uzumAccountId: UUID, shopId: Long, productId: Long): AccountProductInfo {
+        val userToken = authUser(userId, uzumAccountId)
         return kazanExpressClient.getProductInfo(userId, userToken, shopId, productId)
     }
 
     fun changeAccountShopItemPrice(
         userId: String,
-        keAccountId: UUID,
+        uzumAccountId: UUID,
         shopId: Long,
         payload: ShopItemPriceChangePayload
     ): Boolean {
-        val userToken = authUser(userId, keAccountId)
+        val userToken = authUser(userId, uzumAccountId)
         return kazanExpressClient.changeAccountShopItemPrice(userId, userToken, shopId, payload)
     }
 
     fun getProductDescription(
         userId: String,
-        keAccountId: UUID,
+        uzumAccountId: UUID,
         shopId: Long,
         productId: Long
     ): AccountProductDescription {
-        val userToken = authUser(userId, keAccountId)
+        val userToken = authUser(userId, uzumAccountId)
         return kazanExpressClient.getProductDescription(userId, userToken, shopId, productId)
     }
 
     fun authUser(
         userId: String,
-        keAccountId: UUID,
+        uzumAccountId: UUID,
     ): String {
-        val userTokenEntity = uzumUserTokenRepository.findById(userId + keAccountId.toString()).orElse(null)
+        val userTokenEntity = uzumUserTokenRepository.findById(userId + uzumAccountId.toString()).orElse(null)
         val accessToken = userTokenEntity?.accessToken
         val refreshToken = userTokenEntity?.refreshToken
         val recentUserToken = if (accessToken != null && refreshToken != null) {
@@ -68,8 +68,8 @@ class UzumSecureService(
                 val refreshAuthResponseEntity = kazanExpressClient.refreshAuth(userId, refreshToken)
                 val refreshAuthHttpSeries = HttpStatus.Series.resolve(refreshAuthResponseEntity.statusCodeValue)
                 if (refreshAuthHttpSeries == HttpStatus.Series.CLIENT_ERROR) {
-                    val kazanExpressAccount = accountRepository.getUzumAccount(userId, keAccountId)
-                        ?: throw UzumUserAuthException("Not found user by userId=$userId; keAccountId=$keAccountId")
+                    val kazanExpressAccount = accountRepository.getUzumAccount(userId, uzumAccountId)
+                        ?: throw UzumUserAuthException("Not found user by userId=$userId; uzumAccountId=$uzumAccountId")
                     val password = Base64.getDecoder().decode(kazanExpressAccount.password.toByteArray())
                     val decryptedPassword = passwordEncryptor.decryptPassword(password)
                     val authResponse = kazanExpressClient.auth(userId, kazanExpressAccount.name!!, decryptedPassword)
@@ -84,16 +84,16 @@ class UzumSecureService(
                 RecentAuthUserToken(accessToken, refreshToken)
             }
         } else {
-            val kazanExpressAccount = accountRepository.getUzumAccount(userId, keAccountId)
-                ?: throw UzumUserAuthException("Not found user by userId=$userId; keAccountId=$keAccountId")
+            val kazanExpressAccount = accountRepository.getUzumAccount(userId, uzumAccountId)
+                ?: throw UzumUserAuthException("Not found user by userId=$userId; uzumAccountId=$uzumAccountId")
             val kePassword = Base64.getDecoder().decode(kazanExpressAccount.password)
             val password = passwordEncryptor.decryptPassword(kePassword)
             val authResponse = kazanExpressClient.auth(userId, kazanExpressAccount.login, password)
             uzumUserTokenRepository.save(
                 UserTokenEntity(
-                    userId + keAccountId.toString(),
+                    userId + uzumAccountId.toString(),
                     userId,
-                    keAccountId.toString(),
+                    uzumAccountId.toString(),
                     authResponse.accessToken,
                     authResponse.refreshToken
                 )

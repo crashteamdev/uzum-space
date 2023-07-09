@@ -1,16 +1,16 @@
 package dev.crashteam.uzumspace.converter
 
-import dev.crashteam.openapi.kerepricer.model.KeAccountShopItem
+import dev.crashteam.openapi.space.model.UzumAccountShopItem
 import dev.crashteam.uzumspace.repository.postgre.entity.UzumAccountShopItemEntity
 import org.springframework.stereotype.Component
 import java.math.BigDecimal
 
 @Component
 class UzumAccountShopItemEntityToViewConverter :
-    DataConverter<UzumAccountShopItemEntity, KeAccountShopItem> {
+    DataConverter<UzumAccountShopItemEntity, UzumAccountShopItem> {
 
-    override fun convert(source: UzumAccountShopItemEntity): KeAccountShopItem {
-        return KeAccountShopItem().apply {
+    override fun convert(source: UzumAccountShopItemEntity): UzumAccountShopItem {
+        return UzumAccountShopItem().apply {
             this.id = source.id
             this.productId = source.productId
             this.skuId = source.skuId

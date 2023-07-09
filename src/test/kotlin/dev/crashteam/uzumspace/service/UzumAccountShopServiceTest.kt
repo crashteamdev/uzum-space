@@ -1,9 +1,9 @@
 package dev.crashteam.uzumspace.service
 
-import dev.crashteam.openapi.kerepricer.model.AddStrategyRequest
-import dev.crashteam.openapi.kerepricer.model.CloseToMinimalStrategy
+import dev.crashteam.openapi.space.model.AddStrategyRequest
+import dev.crashteam.openapi.space.model.CloseToMinimalStrategy
 import dev.crashteam.uzumspace.ContainerConfiguration
-import dev.crashteam.uzumspace.client.uzum.KazanExpressWebClient
+import dev.crashteam.uzumspace.client.uzum.UzumWebClient
 import dev.crashteam.uzumspace.client.uzum.model.web.*
 import dev.crashteam.uzumspace.db.model.enums.MonitorState
 import dev.crashteam.uzumspace.db.model.enums.SubscriptionPlan
@@ -57,21 +57,21 @@ class UzumAccountShopServiceTest : ContainerConfiguration() {
     lateinit var strategyRepository: UzumAccountShopItemStrategyRepository
 
     @MockBean
-    lateinit var kazanExpressWebClient: KazanExpressWebClient
+    lateinit var uzumWebClient: UzumWebClient
 
     @MockBean
     lateinit var remoteImageLoader: RemoteImageLoader
 
     @Value("classpath:cc1j1sp1ati4tcj33p5g-original.jpg")
-    lateinit var keImage: Resource
+    lateinit var uzumImage: Resource
 
     val userId = UUID.randomUUID().toString()
 
-    val keAccountId = UUID.randomUUID()
+    val uzumAccountId = UUID.randomUUID()
 
-    val keAccountShopId = UUID.randomUUID()
+    val uzumAccountShopId = UUID.randomUUID()
 
-    val keAccountShopItemId = UUID.randomUUID()
+    val uzumAccountShopItemId = UUID.randomUUID()
 
     @BeforeEach
     internal fun setUp() {
@@ -86,8 +86,8 @@ class UzumAccountShopServiceTest : ContainerConfiguration() {
             )
         )
         val accountId = accountRepository.getAccount(userId)!!.id!!
-        val kazanExpressAccountEntity = KazanExpressAccountEntity(
-            id = keAccountId,
+        val uzumAccountEntity = UzumAccountEntity(
+            id = uzumAccountId,
             accountId = accountId,
             externalAccountId = 14,
             name = "account name",
@@ -97,20 +97,20 @@ class UzumAccountShopServiceTest : ContainerConfiguration() {
             password = "test",
             updateState = UpdateState.not_started
         )
-        uzumAccountRepository.save(kazanExpressAccountEntity)
-        val kazanExpressAccountShopEntity = KazanExpressAccountShopEntity(
-            id = keAccountShopId,
-            keAccountId = kazanExpressAccountEntity.id!!,
+        uzumAccountRepository.save(uzumAccountEntity)
+        val kazanExpressAccountShopEntity = UzumAccountShopEntity(
+            id = uzumAccountShopId,
+            uzumAccountId = uzumAccountEntity.id!!,
             externalShopId = 123432,
             name = "Test",
             skuTitle = "TEST-SHOP"
         )
         uzumAccountShopRepository.save(kazanExpressAccountShopEntity)
         uzumAccountShopItemRepository.save(
-            KazanExpressAccountShopItemEntity(
-                id = keAccountShopItemId,
-                keAccountId = kazanExpressAccountEntity.id!!,
-                keAccountShopId = kazanExpressAccountShopEntity.id!!,
+            UzumAccountShopItemEntity(
+                id = uzumAccountShopItemId,
+                uzumAccountId = uzumAccountEntity.id!!,
+                uzumAccountShopId = kazanExpressAccountShopEntity.id!!,
                 categoryId = 123,
                 productId = 123456,
                 skuId = 789,
@@ -130,13 +130,13 @@ class UzumAccountShopServiceTest : ContainerConfiguration() {
             )
         )
         val closeToMinimalStrategy = CloseToMinimalStrategy(10, "close_to_minimal", 100.0, 100.0)
-        val strategyRequest = AddStrategyRequest(keAccountShopItemId, closeToMinimalStrategy)
+        val strategyRequest = AddStrategyRequest(uzumAccountShopItemId, closeToMinimalStrategy)
         uzumAccountShopItemRepository.saveStrategy(strategyRequest)
     }
 
     @Test
     fun `check if strategy exists`() {
-        val shopItem = uzumAccountShopItemRepository.findShopItem(keAccountId, keAccountShopItemId)
+        val shopItem = uzumAccountShopItemRepository.findShopItem(uzumAccountId, uzumAccountShopItemId)
         assertNotEquals(null, shopItem?.strategyId)
         val strategyEntity = shopItem!!.strategyId?.let { strategyRepository.findById(it) }
         assertEquals(strategyEntity?.strategyType, "close_to_minimal")
@@ -145,21 +145,21 @@ class UzumAccountShopServiceTest : ContainerConfiguration() {
     @Test
     fun `add shop item into pool`() {
         // When
-        uzumAccountShopService.addShopItemIntoPool(userId, keAccountId, keAccountShopId, keAccountShopItemId)
-        val keAccountShopItems =
-            uzumAccountShopService.getShopItemsInPool(userId, keAccountId, keAccountShopId, limit = 10, offset = 0)
-        val keAccountShopItem = keAccountShopItems.first().item
+        uzumAccountShopService.addShopItemIntoPool(userId, uzumAccountId, uzumAccountShopId, uzumAccountShopItemId)
+        val uzumAccountShopItems =
+            uzumAccountShopService.getShopItemsInPool(userId, uzumAccountId, uzumAccountShopId, limit = 10, offset = 0)
+        val uzumAccountShopItem = uzumAccountShopItems.first().item
 
         // Then
-        assertEquals(1, keAccountShopItems.size)
-        assertEquals(keAccountShopItemId, keAccountShopItem.id)
+        assertEquals(1, uzumAccountShopItems.size)
+        assertEquals(uzumAccountShopItemId, uzumAccountShopItem.id)
     }
 
     @Test
     fun `remove shop item from pool`() {
         // When
-        uzumAccountShopService.addShopItemIntoPool(userId, keAccountId, keAccountShopId, keAccountShopItemId)
-        uzumAccountShopService.removeShopItemFromPool(userId, keAccountId, keAccountShopId, keAccountShopItemId)
+        uzumAccountShopService.addShopItemIntoPool(userId, uzumAccountId, uzumAccountShopId, uzumAccountShopItemId)
+        uzumAccountShopService.removeShopItemFromPool(userId, uzumAccountId, uzumAccountShopId, uzumAccountShopItemId)
         val shopItemPoolCount = uzumAccountShopService.getShopItemPoolCount(userId)
 
         // Then
@@ -171,7 +171,7 @@ class UzumAccountShopServiceTest : ContainerConfiguration() {
         // Given
         val productId = 5462623L
         val skuId = 7456462345L
-        val keShopItem = KazanExpressShopItemEntity(
+        val uzumShopItem = UzumShopItemEntity(
             productId = productId,
             skuId = skuId,
             categoryId = 12345,
@@ -184,16 +184,16 @@ class UzumAccountShopServiceTest : ContainerConfiguration() {
         )
 
         // When
-        uzumShopItemRepository.save(keShopItem)
+        uzumShopItemRepository.save(uzumShopItem)
         uzumAccountShopService.addShopItemCompetitor(
             userId,
-            keAccountId,
-            keAccountShopId,
-            keAccountShopItemId,
+            uzumAccountId,
+            uzumAccountShopId,
+            uzumAccountShopItemId,
             productId,
             skuId
         )
-        val shopItemCompetitors = uzumAccountShopItemCompetitorRepository.findShopItemCompetitors(keAccountShopItemId)
+        val shopItemCompetitors = uzumAccountShopItemCompetitorRepository.findShopItemCompetitors(uzumAccountShopItemId)
 
         // Then
         assertEquals(1, shopItemCompetitors.size)
@@ -206,19 +206,19 @@ class UzumAccountShopServiceTest : ContainerConfiguration() {
         // Given
         val productId = 5462623L
         val skuId = 7564265423L
-        whenever(kazanExpressWebClient.getProductInfo(any())).then { buildProductResponse(productId, skuId) }
-        whenever(remoteImageLoader.loadResource(any())).then { keImage.inputStream.readAllBytes() }
+        whenever(uzumWebClient.getProductInfo(any())).then { buildProductResponse(productId, skuId) }
+        whenever(remoteImageLoader.loadResource(any())).then { uzumImage.inputStream.readAllBytes() }
 
         // When
         uzumAccountShopService.addShopItemCompetitor(
             userId,
-            keAccountId,
-            keAccountShopId,
-            keAccountShopItemId,
+            uzumAccountId,
+            uzumAccountShopId,
+            uzumAccountShopItemId,
             productId,
             skuId
         )
-        val shopItemCompetitors = uzumAccountShopItemCompetitorRepository.findShopItemCompetitors(keAccountShopItemId)
+        val shopItemCompetitors = uzumAccountShopItemCompetitorRepository.findShopItemCompetitors(uzumAccountShopItemId)
 
         // Then
         assertEquals(1, shopItemCompetitors.size)

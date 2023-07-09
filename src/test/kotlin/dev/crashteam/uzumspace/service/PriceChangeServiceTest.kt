@@ -1,7 +1,7 @@
 package dev.crashteam.uzumspace.service
 
-import dev.crashteam.openapi.kerepricer.model.AddStrategyRequest
-import dev.crashteam.openapi.kerepricer.model.EqualPriceStrategy
+import dev.crashteam.openapi.space.model.AddStrategyRequest
+import dev.crashteam.openapi.space.model.EqualPriceStrategy
 import dev.crashteam.uzumspace.ContainerConfiguration
 import dev.crashteam.uzumspace.client.uzum.model.lk.AccountProductDescription
 import dev.crashteam.uzumspace.db.model.enums.MonitorState
@@ -39,7 +39,7 @@ class PriceChangeServiceTest : ContainerConfiguration() {
     lateinit var uzumAccountShopItemRepository: UzumAccountShopItemRepository
 
     @Autowired
-    lateinit var keShopItemPoolRepository: UzumAccountShopItemPoolRepository
+    lateinit var uzumShopItemPoolRepository: UzumAccountShopItemPoolRepository
 
     @Autowired
     lateinit var uzumShopItemRepository: UzumShopItemRepository
@@ -51,15 +51,15 @@ class PriceChangeServiceTest : ContainerConfiguration() {
     lateinit var priceHistoryRepository: UzumShopItemPriceHistoryRepository
 
     @MockBean
-    lateinit var kazanExpressSecureService: KazanExpressSecureService
+    lateinit var uzumSecureService: UzumSecureService
 
     val userId = UUID.randomUUID().toString()
 
-    val keAccountId = UUID.randomUUID()
+    val uzumAccountId = UUID.randomUUID()
 
-    val keAccountShopId = UUID.randomUUID()
+    val uzumAccountShopId = UUID.randomUUID()
 
-    val keAccountShopItemId = UUID.randomUUID()
+    val uzumAccountShopItemId = UUID.randomUUID()
 
     @BeforeEach
     internal fun setUp() {
@@ -67,8 +67,8 @@ class PriceChangeServiceTest : ContainerConfiguration() {
         accountRepository.save(AccountEntity(userId = userId))
         val accountEntity = accountRepository.getAccount(userId)
         uzumAccountRepository.save(
-            KazanExpressAccountEntity(
-                id = keAccountId,
+            UzumAccountEntity(
+                id = uzumAccountId,
                 accountId = accountEntity?.id!!,
                 externalAccountId = 634542345L,
                 name = "test",
@@ -78,19 +78,19 @@ class PriceChangeServiceTest : ContainerConfiguration() {
                 updateState = UpdateState.not_started,
             )
         )
-        val kazanExpressAccountShopEntity = KazanExpressAccountShopEntity(
-            id = keAccountShopId,
-            keAccountId = keAccountId,
+        val kazanExpressAccountShopEntity = UzumAccountShopEntity(
+            id = uzumAccountShopId,
+            uzumAccountId = uzumAccountId,
             externalShopId = 123432,
             name = "Test",
             skuTitle = "TEST-SHOP"
         )
         uzumAccountShopRepository.save(kazanExpressAccountShopEntity)
         uzumAccountShopItemRepository.save(
-            KazanExpressAccountShopItemEntity(
-                id = keAccountShopItemId,
-                keAccountId = keAccountId,
-                keAccountShopId = kazanExpressAccountShopEntity.id!!,
+            UzumAccountShopItemEntity(
+                id = uzumAccountShopItemId,
+                uzumAccountId = uzumAccountId,
+                uzumAccountShopId = kazanExpressAccountShopEntity.id!!,
                 categoryId = 123,
                 productId = 123456,
                 skuId = 789,
@@ -114,13 +114,13 @@ class PriceChangeServiceTest : ContainerConfiguration() {
     @Test
     fun `check equal price strategy`() {
 
-        val kazanExpressAccountShopItemCompetitorEntity = KazanExpressAccountShopItemCompetitorEntity(
+        val kazanExpressAccountShopItemCompetitorEntity = UzumAccountShopItemCompetitorEntity(
             id = UUID.randomUUID(),
-            keAccountShopItemId = keAccountShopItemId,
+            uzumAccountShopItemId = uzumAccountShopItemId,
             productId = 635243L,
             skuId = 4231453L
         )
-        val competitorKeShopItemEntity = KazanExpressShopItemEntity(
+        val competitorKeShopItemEntity = UzumShopItemEntity(
             productId = 635243L,
             skuId = 4231453L,
             categoryId = 556231L,
@@ -132,20 +132,20 @@ class PriceChangeServiceTest : ContainerConfiguration() {
             availableAmount = 10,
             lastUpdate = LocalDateTime.now()
         )
-        keShopItemPoolRepository.save(KazanExpressAccountShopItemPoolEntity(keAccountShopItemId))
+        uzumShopItemPoolRepository.save(UzumAccountShopItemPoolEntity(uzumAccountShopItemId))
 
         uzumShopItemRepository.save(competitorKeShopItemEntity)
         uzumAccountShopItemCompetitorRepository.save(kazanExpressAccountShopItemCompetitorEntity)
 
         val equalPriceStrategy = EqualPriceStrategy()
-        equalPriceStrategy.maximumThreshold = 100.0
+        equalPriceStrategy.maximumThreshold = 6000.0
         equalPriceStrategy.minimumThreshold = 100.0
         equalPriceStrategy.strategyType = "equal_price"
 
-        val strategyRequest = AddStrategyRequest(keAccountShopItemId, equalPriceStrategy)
+        val strategyRequest = AddStrategyRequest(uzumAccountShopItemId, equalPriceStrategy)
         uzumAccountShopItemRepository.saveStrategy(strategyRequest)
 
-        whenever(kazanExpressSecureService.getProductDescription(any(), any(), any(), any() )).then {
+        whenever(uzumSecureService.getProductDescription(any(), any(), any(), any() )).then {
             AccountProductDescription(
                 id = 12345L,
                 shopSkuTitle = "skuTitle",
@@ -159,13 +159,13 @@ class PriceChangeServiceTest : ContainerConfiguration() {
                 skuList = emptyList()
             )
         }
-        whenever(kazanExpressSecureService.changeAccountShopItemPrice(any(), any(), any(), any())).then { true }
+        whenever(uzumSecureService.changeAccountShopItemPrice(any(), any(), any(), any())).then { true }
 
-        priceChangeService.recalculateUserShopItemPrice(userId, keAccountId)
+        priceChangeService.recalculateUserShopItemPrice(userId, uzumAccountId)
         val paginateEntities =
-            priceHistoryRepository.findHistoryByShopItemId(keAccountShopItemId, limit = 10, offset = 0)
-        val shopItemEntity = uzumAccountShopItemRepository.findShopItem(keAccountId, keAccountShopId, keAccountShopItemId)
-        val shopItemPoolFilledEntity = keShopItemPoolRepository.findShopItemInPool(userId, keAccountId).first()
+            priceHistoryRepository.findHistoryByShopItemId(uzumAccountShopItemId, limit = 10, offset = 0)
+        val shopItemEntity = uzumAccountShopItemRepository.findShopItem(uzumAccountId, uzumAccountShopId, uzumAccountShopItemId)
+        val shopItemPoolFilledEntity = uzumShopItemPoolRepository.findShopItemInPool(userId, uzumAccountId).first()
 
         // Then
         assertEquals(1, paginateEntities.size)
@@ -179,13 +179,13 @@ class PriceChangeServiceTest : ContainerConfiguration() {
     @Test
     fun `change user pool item price`() {
 
-        val kazanExpressAccountShopItemCompetitorEntity = KazanExpressAccountShopItemCompetitorEntity(
+        val kazanExpressAccountShopItemCompetitorEntity = UzumAccountShopItemCompetitorEntity(
             id = UUID.randomUUID(),
-            keAccountShopItemId = keAccountShopItemId,
+            uzumAccountShopItemId = uzumAccountShopItemId,
             productId = 635242L,
             skuId = 4231456L
         )
-        val competitorKeShopItemEntity = KazanExpressShopItemEntity(
+        val competitorKeShopItemEntity = UzumShopItemEntity(
             productId = 635242L,
             skuId = 4231456L,
             categoryId = 556235L,
@@ -197,12 +197,12 @@ class PriceChangeServiceTest : ContainerConfiguration() {
             availableAmount = 10,
             lastUpdate = LocalDateTime.now()
         )
-        keShopItemPoolRepository.save(KazanExpressAccountShopItemPoolEntity(keAccountShopItemId))
+        uzumShopItemPoolRepository.save(UzumAccountShopItemPoolEntity(uzumAccountShopItemId))
 
         uzumShopItemRepository.save(competitorKeShopItemEntity)
         uzumAccountShopItemCompetitorRepository.save(kazanExpressAccountShopItemCompetitorEntity)
 
-        whenever(kazanExpressSecureService.getProductDescription(any(), any(), any(), any() )).then {
+        whenever(uzumSecureService.getProductDescription(any(), any(), any(), any() )).then {
             AccountProductDescription(
                 id = 12345L,
                 shopSkuTitle = "skuTitle",
@@ -216,13 +216,13 @@ class PriceChangeServiceTest : ContainerConfiguration() {
                 skuList = emptyList()
             )
         }
-        whenever(kazanExpressSecureService.changeAccountShopItemPrice(any(), any(), any(), any())).then { true }
+        whenever(uzumSecureService.changeAccountShopItemPrice(any(), any(), any(), any())).then { true }
 
-        priceChangeService.recalculateUserShopItemPrice(userId, keAccountId)
+        priceChangeService.recalculateUserShopItemPrice(userId, uzumAccountId)
         val paginateEntities =
-            priceHistoryRepository.findHistoryByShopItemId(keAccountShopItemId, limit = 10, offset = 0)
-        val shopItemEntity = uzumAccountShopItemRepository.findShopItem(keAccountId, keAccountShopId, keAccountShopItemId)
-        val shopItemPoolFilledEntity = keShopItemPoolRepository.findShopItemInPool(userId, keAccountId).first()
+            priceHistoryRepository.findHistoryByShopItemId(uzumAccountShopItemId, limit = 10, offset = 0)
+        val shopItemEntity = uzumAccountShopItemRepository.findShopItem(uzumAccountId, uzumAccountShopId, uzumAccountShopItemId)
+        val shopItemPoolFilledEntity = uzumShopItemPoolRepository.findShopItemInPool(userId, uzumAccountId).first()
 
         // Then
         assertEquals(1, paginateEntities.size)

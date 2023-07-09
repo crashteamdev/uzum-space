@@ -4,7 +4,7 @@ import java.util.*
 
 data class UzumAccountShopEntity(
     val id: UUID? = null,
-    val keAccountId: UUID,
+    val uzumAccountId: UUID,
     val externalShopId: Long,
     val name: String,
     val skuTitle: String?

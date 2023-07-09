@@ -3,6 +3,7 @@ package dev.crashteam.uzumspace.repository.postgre.mapper
 import dev.crashteam.uzumspace.db.model.tables.Payment.PAYMENT
 import dev.crashteam.uzumspace.repository.postgre.entity.PaymentEntity
 import org.springframework.stereotype.Component
+import org.jooq.Record
 
 @Component
 class RecordToPaymentEntityMapper : RecordMapper<PaymentEntity> {

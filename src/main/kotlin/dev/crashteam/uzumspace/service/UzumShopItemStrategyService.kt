@@ -1,7 +1,7 @@
 package dev.crashteam.uzumspace.service
 
-import dev.crashteam.openapi.kerepricer.model.AddStrategyRequest
-import dev.crashteam.openapi.kerepricer.model.PatchStrategy
+import dev.crashteam.openapi.space.model.AddStrategyRequest
+import dev.crashteam.openapi.space.model.PatchStrategy
 import dev.crashteam.uzumspace.repository.postgre.UzumAccountShopItemRepository
 import dev.crashteam.uzumspace.repository.postgre.UzumAccountShopItemStrategyRepository
 import dev.crashteam.uzumspace.repository.postgre.entity.strategy.UzumAccountShopItemStrategyEntity

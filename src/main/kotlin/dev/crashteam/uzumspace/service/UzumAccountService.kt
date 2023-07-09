@@ -32,8 +32,8 @@ class UzumAccountService(
     private val scheduler: Scheduler,
 ) {
 
-    fun addKeAccount(userId: String, login: String, password: String): UzumAccountEntity {
-        log.debug { "Add ke account. userId=$userId; login=$login; password=*****" }
+    fun addUzumAccount(userId: String, login: String, password: String): UzumAccountEntity {
+        log.debug { "Add uzum account. userId=$userId; login=$login; password=*****" }
         val accountEntity = accountRepository.getAccount(userId)
             ?: throw UserNotFoundException("Not found user by id=${userId}")
         val isValidKeAccountCount = accountRestrictionValidator.validateKeAccountCount(userId)
@@ -53,45 +53,45 @@ class UzumAccountService(
         return kazanExpressAccountEntity
     }
 
-    fun removeKeAccount(userId: String, keAccountId: UUID): Int {
-        log.debug { "Remove ke account. userId=$userId; keAccountId=$keAccountId" }
-        return uzumAccountRepository.removeUzumAccount(userId, keAccountId)
+    fun removeUzumAccount(userId: String, uzumAccountId: UUID): Int {
+        log.debug { "Remove uzum account. userId=$userId; uzumAccountId=$uzumAccountId" }
+        return uzumAccountRepository.removeUzumAccount(userId, uzumAccountId)
     }
 
-    fun getKeAccounts(userId: String): List<UzumAccountEntity> {
+    fun getUzumAccounts(userId: String): List<UzumAccountEntity> {
         return uzumAccountRepository.getUzumAccounts(userId)
     }
 
-    fun getKeAccount(userId: String, keAccountId: UUID): UzumAccountEntity? {
-        return uzumAccountRepository.getUzumAccount(userId, keAccountId)
+    fun getUzumAccount(userId: String, uzumAccountId: UUID): UzumAccountEntity? {
+        return uzumAccountRepository.getUzumAccount(userId, uzumAccountId)
     }
 
-    fun editKeAccount(userId: String, keAccountId: UUID, login: String, password: String): UzumAccountEntity {
-        val kazanExpressAccount = uzumAccountRepository.getUzumAccount(userId, keAccountId)
+    fun editUzumAccount(userId: String, uzumAccountId: UUID, login: String, password: String): UzumAccountEntity {
+        val uzumAccountEntity = uzumAccountRepository.getUzumAccount(userId, uzumAccountId)
             ?: throw UserNotFoundException("Not found user by id=${userId}")
-        if (kazanExpressAccount.initializeState == InitializeState.in_progress) {
+        if (uzumAccountEntity.initializeState == InitializeState.in_progress) {
             throw IllegalStateException("Not allowed to change account credential while initialization in progress")
         }
-        if (kazanExpressAccount.updateState == UpdateState.in_progress) {
+        if (uzumAccountEntity.updateState == UpdateState.in_progress) {
             throw IllegalStateException("Not allowed to change account credential while update state in progress")
         }
         val encryptedPassword = passwordEncryptor.encryptPassword(password)
         val updatedKeAccount =
-            kazanExpressAccount.copy(login = login, password = Base64.getEncoder().encodeToString(encryptedPassword))
+            uzumAccountEntity.copy(login = login, password = Base64.getEncoder().encodeToString(encryptedPassword))
         uzumAccountRepository.save(updatedKeAccount)
 
         return updatedKeAccount
     }
 
     @Transactional
-    fun initializeKeAccountJob(userId: String, keAccountId: UUID): Boolean {
-        val kazanExpressAccount = uzumAccountRepository.getUzumAccount(userId, keAccountId)
-            ?: throw IllegalArgumentException("Not found KE account. userId=$userId;keAccountId=$keAccountId")
-        if (kazanExpressAccount.initializeState == InitializeState.in_progress) {
-            log.debug { "Initialize task already in progress. userId=$userId;keAccountId=$keAccountId" }
+    fun initializeUzumAccountJob(userId: String, uzumAccountId: UUID): Boolean {
+        val uzumAccountEntity = uzumAccountRepository.getUzumAccount(userId, uzumAccountId)
+            ?: throw IllegalArgumentException("Not found UZUM account. userId=$userId;uzumAccountId=$uzumAccountId")
+        if (uzumAccountEntity.initializeState == InitializeState.in_progress) {
+            log.debug { "Initialize task already in progress. userId=$userId;uzumAccountId=$uzumAccountId" }
             return false
         }
-        val jobIdentity = "$keAccountId-keaccount-initialize-job"
+        val jobIdentity = "$uzumAccountId-keaccount-initialize-job"
         val jobDetail =
             JobBuilder.newJob(UzumAccountInitializeJob::class.java).withIdentity(jobIdentity).build()
         val triggerFactoryBean = SimpleTriggerFactoryBean().apply {
@@ -104,12 +104,12 @@ class UzumAccountService(
             afterPropertiesSet()
         }.getObject()
         jobDetail.jobDataMap["userId"] = userId
-        jobDetail.jobDataMap["keAccountId"] = keAccountId
+        jobDetail.jobDataMap["uzumAccountId"] = uzumAccountId
         try {
             scheduler.scheduleJob(jobDetail, triggerFactoryBean)
             uzumAccountRepository.changeInitializeState(
                 userId,
-                keAccountId,
+                uzumAccountId,
                 InitializeState.in_progress
             )
             return true
@@ -121,9 +121,9 @@ class UzumAccountService(
         return false
     }
 
-    fun changeKeAccountMonitoringState(userId: String, keAccountId: UUID, monitorState: MonitorState): Int {
-        log.debug { "Change ke account monitor state. userId=$userId; keAccountId=$keAccountId; monitorState=$monitorState" }
-        return uzumAccountRepository.changeMonitorState(userId, keAccountId, monitorState)
+    fun changeUzumAccountMonitoringState(userId: String, uzumAccountId: UUID, monitorState: MonitorState): Int {
+        log.debug { "Change ke account monitor state. userId=$userId; uzumAccountId=$uzumAccountId; monitorState=$monitorState" }
+        return uzumAccountRepository.changeMonitorState(userId, uzumAccountId, monitorState)
     }
 
 }

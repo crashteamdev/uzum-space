@@ -14,7 +14,7 @@ class QuantityDependentPriceChangeCalculatorStrategy(
     private val uzumShopItemService: UzumShopItemService
 ) : PriceChangeCalculatorStrategy {
     override fun calculatePrice(
-        keAccountShopItemId: UUID,
+        uzumAccountShopItemId: UUID,
         sellPriceMinor: BigDecimal,
         options: CalculatorOptions?
     ): CalculationResult? {

@@ -6,8 +6,8 @@ import java.util.*
 
 data class UzumAccountShopItemEntity(
     val id: UUID,
-    val keAccountId: UUID,
-    val keAccountShopId: UUID,
+    val uzumAccountId: UUID,
+    val uzumAccountShopId: UUID,
     val categoryId: Long,
     val productId: Long,
     val skuId: Long,

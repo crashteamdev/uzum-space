@@ -1,18 +1,18 @@
 package dev.crashteam.uzumspace.converter
 
-import dev.crashteam.openapi.kerepricer.model.CloseToMinimalStrategy
-import dev.crashteam.openapi.kerepricer.model.EqualPriceStrategy
-import dev.crashteam.openapi.kerepricer.model.KeAccountShopItemStrategy
-import dev.crashteam.openapi.kerepricer.model.QuantityDependentStrategy
-import dev.crashteam.openapi.kerepricer.model.Strategy
+import dev.crashteam.openapi.space.model.CloseToMinimalStrategy
+import dev.crashteam.openapi.space.model.EqualPriceStrategy
+import dev.crashteam.openapi.space.model.UzumAccountShopItemStrategy
+import dev.crashteam.openapi.space.model.QuantityDependentStrategy
+import dev.crashteam.openapi.space.model.Strategy
 import dev.crashteam.uzumspace.db.model.enums.StrategyType
 import dev.crashteam.uzumspace.repository.postgre.entity.strategy.UzumAccountShopItemStrategyEntity
 import org.springframework.stereotype.Component
 
 @Component
-class UzumAccountShopItemStrategyConverter: DataConverter<UzumAccountShopItemStrategyEntity, KeAccountShopItemStrategy> {
-    override fun convert(source: UzumAccountShopItemStrategyEntity): KeAccountShopItemStrategy {
-        return KeAccountShopItemStrategy().apply {
+class UzumAccountShopItemStrategyConverter: DataConverter<UzumAccountShopItemStrategyEntity, UzumAccountShopItemStrategy> {
+    override fun convert(source: UzumAccountShopItemStrategyEntity): UzumAccountShopItemStrategy {
+        return UzumAccountShopItemStrategy().apply {
             id = source.id
             strategy = getStrategy(source)
         }

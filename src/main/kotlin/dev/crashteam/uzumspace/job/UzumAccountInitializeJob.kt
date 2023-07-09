@@ -4,7 +4,7 @@ import dev.crashteam.uzumspace.client.uzum.UzumLkClient
 import dev.crashteam.uzumspace.db.model.enums.InitializeState
 import dev.crashteam.uzumspace.extensions.getApplicationContext
 import dev.crashteam.uzumspace.repository.postgre.UzumAccountRepository
-import dev.crashteam.uzumspace.service.UpdateKeAccountService
+import dev.crashteam.uzumspace.service.UpdateUzumAccountService
 import dev.crashteam.uzumspace.service.encryption.AESPasswordEncryptor
 import mu.KotlinLogging
 import org.quartz.JobExecutionContext
@@ -22,41 +22,41 @@ class UzumAccountInitializeJob : QuartzJobBean() {
         val applicationContext = context.getApplicationContext()
         val uzumAccountRepository = applicationContext.getBean(UzumAccountRepository::class.java)
         val kazanExpressLkClient = applicationContext.getBean(UzumLkClient::class.java)
-        val updateKeAccountService = applicationContext.getBean(UpdateKeAccountService::class.java)
+        val updateUzumAccountService = applicationContext.getBean(UpdateUzumAccountService::class.java)
         val aesPasswordEncryptor = applicationContext.getBean(AESPasswordEncryptor::class.java)
         val transactionManager = applicationContext.getBean(PlatformTransactionManager::class.java)
         val retryTemplate = applicationContext.getBean(RetryTemplate::class.java)
-        val keAccountId = context.jobDetail.jobDataMap["keAccountId"] as? UUID
-            ?: throw IllegalStateException("keAccountId can't be null")
+        val uzumAccountId = context.jobDetail.jobDataMap["uzumAccountId"] as? UUID
+            ?: throw IllegalStateException("uzumAccountId can't be null")
         val userId = context.jobDetail.jobDataMap["userId"] as? String
             ?: throw IllegalStateException("userId can't be null")
         try {
-            val kazanExpressAccount = uzumAccountRepository.getUzumAccount(keAccountId)!!
-            val password = Base64.getDecoder().decode(kazanExpressAccount.keAccountEntity.password.toByteArray())
+            val kazanExpressAccount = uzumAccountRepository.getUzumAccount(uzumAccountId)!!
+            val password = Base64.getDecoder().decode(kazanExpressAccount.uzumAccountEntity.password.toByteArray())
             val decryptedPassword = aesPasswordEncryptor.decryptPassword(password)
             retryTemplate.execute<Void, Exception> {
                 TransactionTemplate(transactionManager).execute {
                     val authResponse = kazanExpressLkClient.auth(
                         userId,
-                        kazanExpressAccount.keAccountEntity.login,
+                        kazanExpressAccount.uzumAccountEntity.login,
                         decryptedPassword
                     )
                     val checkTokenResponse = kazanExpressLkClient.checkToken(userId, authResponse.accessToken).body!!
                     uzumAccountRepository.save(
-                        kazanExpressAccount.keAccountEntity.copy(
+                        kazanExpressAccount.uzumAccountEntity.copy(
                             name = checkTokenResponse.firstName,
                             externalAccountId = checkTokenResponse.accountId,
                             email = checkTokenResponse.email,
                         )
                     )
-                    uzumAccountRepository.changeInitializeState(userId, keAccountId, InitializeState.finished)
-                    updateKeAccountService.executeUpdateJob(userId, keAccountId)
+                    uzumAccountRepository.changeInitializeState(userId, uzumAccountId, InitializeState.finished)
+                    updateUzumAccountService.executeUpdateJob(userId, uzumAccountId)
                     null
                 }
             }
         } catch (e: Exception) {
             log.warn(e) { "Failed to initialize Uzum account" }
-            uzumAccountRepository.changeInitializeState(userId, keAccountId, InitializeState.error)
+            uzumAccountRepository.changeInitializeState(userId, uzumAccountId, InitializeState.error)
         }
 
     }

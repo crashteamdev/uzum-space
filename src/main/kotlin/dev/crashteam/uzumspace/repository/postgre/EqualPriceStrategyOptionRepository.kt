@@ -1,8 +1,8 @@
 package dev.crashteam.uzumspace.repository.postgre
 
-import dev.crashteam.openapi.kerepricer.model.EqualPriceStrategy
-import dev.crashteam.openapi.kerepricer.model.QuantityDependentStrategy
-import dev.crashteam.openapi.kerepricer.model.Strategy
+import dev.crashteam.openapi.space.model.EqualPriceStrategy
+import dev.crashteam.openapi.space.model.QuantityDependentStrategy
+import dev.crashteam.openapi.space.model.Strategy
 import dev.crashteam.uzumspace.db.model.enums.StrategyType
 import dev.crashteam.uzumspace.db.model.tables.StrategyOption
 import org.jooq.DSLContext

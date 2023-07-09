@@ -28,38 +28,38 @@ class UzumAccountShopService(
     private val accountSubscriptionRestrictionValidator: AccountSubscriptionRestrictionValidator,
 ) {
 
-    fun getKeAccountShops(userId: String, keAccountId: UUID): List<UzumAccountShopEntity> {
-        log.debug { "Get ke account shops. userId=$userId; keAccountId=${keAccountId}" }
-        return uzumAccountShopRepository.getKeAccountShops(userId, keAccountId)
+    fun getUzumAccountShops(userId: String, uzumAccountId: UUID): List<UzumAccountShopEntity> {
+        log.debug { "Get ke account shops. userId=$userId; uzumAccountId=${uzumAccountId}" }
+        return uzumAccountShopRepository.getUzumAccountShops(userId, uzumAccountId)
     }
 
-    fun getKeAccountShopItem(
+    fun getUzumAccountShopItem(
         userId: String,
-        keAccountId: UUID,
+        uzumAccountId: UUID,
         shopItemId: UUID,
     ): UzumAccountShopItemEntity? {
         log.debug {
-            "Get ke account shop item. userId=$userId; keAccountId=${keAccountId}; shopItemId=${shopItemId}"
+            "Get ke account shop item. userId=$userId; uzumAccountId=${uzumAccountId}; shopItemId=${shopItemId}"
         }
-        return uzumAccountShopItemRepository.findShopItem(keAccountId, shopItemId)
+        return uzumAccountShopItemRepository.findShopItem(uzumAccountId, shopItemId)
     }
 
-    fun getKeAccountShopItems(
+    fun getUzumAccountShopItems(
         userId: String,
-        keAccountId: UUID,
-        keAccountShopId: UUID,
+        uzumAccountId: UUID,
+        uzumAccountShopId: UUID,
         filter: Condition? = null,
         sortFields: List<Pair<Field<*>, SortType>>? = null,
         limit: Long,
         offset: Long
     ): List<PaginateEntity<UzumAccountShopItemEntity>> {
         log.debug {
-            "Get ke account shop items. userId=$userId; keAccountId=${keAccountId};" +
-                    " keAccountShopId=$keAccountShopId; limit=$limit; offset=$offset"
+            "Get ke account shop items. userId=$userId; uzumAccountId=${uzumAccountId};" +
+                    " uzumAccountShopId=$uzumAccountShopId; limit=$limit; offset=$offset"
         }
         return uzumAccountShopItemRepository.findShopItems(
-            keAccountId,
-            keAccountShopId,
+            uzumAccountId,
+            uzumAccountShopId,
             filter,
             sortFields,
             limit,
@@ -69,45 +69,45 @@ class UzumAccountShopService(
 
     fun addShopItemIntoPool(
         userId: String,
-        keAccountId: UUID,
-        keAccountShopId: UUID,
-        keAccountShopItemId: UUID
+        uzumAccountId: UUID,
+        uzumAccountShopId: UUID,
+        uzumAccountShopItemId: UUID
     ) {
         log.debug {
-            "Add shop item into pool. userId=$userId; keAccountId=${keAccountId}; keAccountShopId=$keAccountShopId"
+            "Add shop item into pool. userId=$userId; uzumAccountId=${uzumAccountId}; uzumAccountShopId=$uzumAccountShopId"
         }
         val isValidPoolItemCount = accountSubscriptionRestrictionValidator.validateItemInPoolCount(userId)
 
         if (!isValidPoolItemCount)
             throw AccountItemPoolLimitExceededException("Pool limit exceeded for user. userId=$userId")
 
-        val kazanExpressAccountShopItemPoolEntity = UzumAccountShopItemPoolEntity(keAccountShopItemId)
+        val kazanExpressAccountShopItemPoolEntity = UzumAccountShopItemPoolEntity(uzumAccountShopItemId)
         uzumAccountShopItemPoolRepository.save(kazanExpressAccountShopItemPoolEntity)
     }
 
     @Transactional
     fun addShopItemCompetitor(
         userId: String,
-        keAccountId: UUID,
-        keAccountShopId: UUID,
-        keAccountShopItemId: UUID,
+        uzumAccountId: UUID,
+        uzumAccountShopId: UUID,
+        uzumAccountShopItemId: UUID,
         productId: Long,
         skuId: Long
     ) {
         log.debug {
-            "Add shop item competitor. userId=$userId; keAccountId=$keAccountId;" +
-                    " keAccountShopId=${keAccountShopId}; keAccountShopItemId=${keAccountShopItemId}"
+            "Add shop item competitor. userId=$userId; uzumAccountId=$uzumAccountId;" +
+                    " uzumAccountShopId=${uzumAccountShopId}; uzumAccountShopItemId=${uzumAccountShopItemId}"
         }
         val isValidCompetitorItemCount =
-            accountSubscriptionRestrictionValidator.validateItemCompetitorCount(userId, keAccountShopItemId)
+            accountSubscriptionRestrictionValidator.validateItemCompetitorCount(userId, uzumAccountShopItemId)
         if (!isValidCompetitorItemCount)
             throw AccountItemCompetitorLimitExceededException("Pool limit exceeded for user. userId=$userId")
 
         val kazanExpressAccountShopItemEntity =
-            uzumAccountShopItemRepository.findShopItem(keAccountId, keAccountShopId, keAccountShopItemId)
+            uzumAccountShopItemRepository.findShopItem(uzumAccountId, uzumAccountShopId, uzumAccountShopItemId)
                 ?: throw IllegalArgumentException(
                     "Not found shop item." +
-                            " keAccountId=${keAccountId};keAccountShopId=${keAccountShopId};keAccountShopItemId=${keAccountShopItemId}"
+                            " uzumAccountId=${uzumAccountId};uzumAccountShopId=${uzumAccountShopId};uzumAccountShopItemId=${uzumAccountShopItemId}"
                 )
         val shopItemEntity = uzumShopItemRepository.findByProductIdAndSkuId(productId, skuId)
         if (shopItemEntity == null) {
@@ -116,11 +116,11 @@ class UzumAccountShopService(
                 throw IllegalArgumentException("Not found shop item by productId=$productId; skuId=$skuId")
             }
             val productData = productInfo.payload.data
-            uzumShopItemService.addShopItemFromKeData(productData)
+            uzumShopItemService.addShopItemFromUzumData(productData)
         }
         val kazanExpressAccountShopItemCompetitorEntity = UzumAccountShopItemCompetitorEntity(
             id = UUID.randomUUID(),
-            keAccountShopItemId = kazanExpressAccountShopItemEntity.id,
+            uzumAccountShopItemId = kazanExpressAccountShopItemEntity.id,
             productId = productId,
             skuId = skuId,
         )
@@ -129,33 +129,33 @@ class UzumAccountShopService(
 
     fun removeShopItemCompetitor(
         userId: String,
-        keAccountId: UUID,
-        keAccountShopItemId: UUID,
+        uzumAccountId: UUID,
+        uzumAccountShopItemId: UUID,
         competitorId: UUID,
     ): Int {
         log.debug {
-            "Remove shop item competitor. userId=$userId; keAccountId=$keAccountId;" +
-                    " keAccountShopItemId=$keAccountShopItemId; competitorId=$competitorId"
+            "Remove shop item competitor. userId=$userId; uzumAccountId=$uzumAccountId;" +
+                    " uzumAccountShopItemId=$uzumAccountShopItemId; competitorId=$competitorId"
         }
-        return uzumAccountShopItemCompetitorRepository.removeShopItemCompetitor(keAccountShopItemId, competitorId)
+        return uzumAccountShopItemCompetitorRepository.removeShopItemCompetitor(uzumAccountShopItemId, competitorId)
     }
 
     fun getShopItemCompetitors(
         userId: String,
-        keAccountId: UUID,
+        uzumAccountId: UUID,
         keShopId: UUID,
-        keAccountShopItemId: UUID,
+        uzumAccountShopItemId: UUID,
         filter: Condition? = null,
         sortFields: List<Pair<Field<*>, SortType>>? = null,
         limit: Long,
         offset: Long
-    ): List<PaginateEntity<UzumAccountShopItemCompetitorEntityJoinKeShopItemEntity>> {
+    ): List<PaginateEntity<UzumAccountShopItemCompetitorEntityJoinUzumShopItemEntity>> {
         log.debug {
-            "Get shop item competitors. userId=$userId; keAccountId=$keAccountId;" +
-                    " keShopId=$keShopId; keAccountShopItemId=$keAccountShopItemId; limit=$limit; offset=$offset"
+            "Get shop item competitors. userId=$userId; uzumAccountId=$uzumAccountId;" +
+                    " keShopId=$keShopId; uzumAccountShopItemId=$uzumAccountShopItemId; limit=$limit; offset=$offset"
         }
         return uzumAccountShopItemCompetitorRepository.findShopItemCompetitors(
-            keAccountShopItemId,
+            uzumAccountShopItemId,
             filter,
             sortFields,
             limit,
@@ -170,17 +170,17 @@ class UzumAccountShopService(
 
     fun getShopItemsInPool(
         userId: String,
-        keAccountId: UUID,
+        uzumAccountId: UUID,
         keShopId: UUID,
         filter: Condition? = null,
         sortFields: List<Pair<Field<*>, SortType>>? = null,
         limit: Long,
         offset: Long
     ): List<PaginateEntity<UzumAccountShopItemEntity>> {
-        log.debug { "Get user shop items in pool. userId=$userId; keAccountId=$keAccountId; keShopId=$keShopId" }
+        log.debug { "Get user shop items in pool. userId=$userId; uzumAccountId=$uzumAccountId; keShopId=$keShopId" }
         return uzumAccountShopItemPoolRepository.findShopItemInPool(
             userId,
-            keAccountId,
+            uzumAccountId,
             keShopId,
             filter,
             sortFields,
@@ -191,29 +191,29 @@ class UzumAccountShopService(
 
     fun removeShopItemFromPool(
         userId: String,
-        keAccountId: UUID,
-        keAccountShopId: UUID,
+        uzumAccountId: UUID,
+        uzumAccountShopId: UUID,
         keShopItemId: UUID,
     ): Int {
         log.debug {
-            "Remove shop item from pool. userId=$userId; keAccountId=$keAccountId;" +
-                    " keAccountShopId=$keAccountShopId; keShopItemId=$keShopItemId;"
+            "Remove shop item from pool. userId=$userId; uzumAccountId=$uzumAccountId;" +
+                    " uzumAccountShopId=$uzumAccountShopId; keShopItemId=$keShopItemId;"
         }
         return uzumAccountShopItemPoolRepository.delete(keShopItemId)
     }
 
     fun changeShopItemPriceOptions(
-        keAccountId: UUID,
-        keAccountShopItemId: UUID,
+        uzumAccountId: UUID,
+        uzumAccountShopItemId: UUID,
         step: Int,
         minimumThreshold: Long,
         maximumThreshold: Long,
         discount: BigDecimal
     ): Int {
-        log.debug { "Change shop item price options. keAccountId=$keAccountId; keAccountShopItemId=$keAccountShopItemId" }
+        log.debug { "Change shop item price options. uzumAccountId=$uzumAccountId; uzumAccountShopItemId=$uzumAccountShopItemId" }
         return uzumAccountShopItemRepository.updatePriceChangeOptions(
-            keAccountId,
-            keAccountShopItemId,
+            uzumAccountId,
+            uzumAccountShopItemId,
             step,
             minimumThreshold,
             maximumThreshold,

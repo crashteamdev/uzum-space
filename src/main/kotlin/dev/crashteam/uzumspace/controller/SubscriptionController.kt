@@ -1,7 +1,7 @@
 package dev.crashteam.uzumspace.controller
 
-import dev.crashteam.openapi.kerepricer.api.SubscriptionsApi
-import dev.crashteam.openapi.kerepricer.model.Subscription
+import dev.crashteam.openapi.space.api.SubscriptionsApi
+import dev.crashteam.openapi.space.model.Subscription
 import dev.crashteam.uzumspace.db.model.enums.SubscriptionPlan
 import dev.crashteam.uzumspace.repository.postgre.SubscriptionRepository
 import org.springframework.http.ResponseEntity
@@ -30,9 +30,9 @@ class SubscriptionsController(
                 Subscription().apply {
                     this.name = it.name
                     this.plan = when (it.plan) {
-                        SubscriptionPlan.default_ -> dev.crashteam.openapi.kerepricer.model.SubscriptionPlan.DEFAULT
-                        SubscriptionPlan.pro -> dev.crashteam.openapi.kerepricer.model.SubscriptionPlan.PRO
-                        SubscriptionPlan.advanced -> dev.crashteam.openapi.kerepricer.model.SubscriptionPlan.ADVANCED
+                        SubscriptionPlan.default_ -> dev.crashteam.openapi.space.model.SubscriptionPlan.DEFAULT
+                        SubscriptionPlan.pro -> dev.crashteam.openapi.space.model.SubscriptionPlan.PRO
+                        SubscriptionPlan.advanced -> dev.crashteam.openapi.space.model.SubscriptionPlan.ADVANCED
                     }
                     this.price = it.price
                 }

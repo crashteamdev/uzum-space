@@ -22,7 +22,7 @@ import java.util.*
 private val log = KotlinLogging.logger {}
 
 @Service
-class UpdateKeAccountService(
+class UpdateUzumAccountService(
     private val uzumAccountRepository: UzumAccountRepository,
     private val uzumAccountShopRepository: UzumAccountShopRepository,
     private val uzumAccountShopItemRepository: UzumAccountShopItemRepository,
@@ -34,20 +34,20 @@ class UpdateKeAccountService(
 ) {
 
     @Transactional
-    fun executeUpdateJob(userId: String, keAccountId: UUID): Boolean {
-        val kazanExpressAccount = uzumAccountRepository.getUzumAccount(userId, keAccountId)!!
+    fun executeUpdateJob(userId: String, uzumAccountId: UUID): Boolean {
+        val kazanExpressAccount = uzumAccountRepository.getUzumAccount(userId, uzumAccountId)!!
         if (kazanExpressAccount.updateState == UpdateState.in_progress) {
-            log.debug { "Ke account update already in progress. userId=$userId;keAccountId=$keAccountId" }
+            log.debug { "Uzum account update already in progress. userId=$userId;uzumAccountId=$uzumAccountId" }
             return false
         }
         if (kazanExpressAccount.lastUpdate != null) {
             val lastUpdate = kazanExpressAccount.lastUpdate.plusMinutes(10)
             if (lastUpdate?.isBefore(LocalDateTime.now()) == false) {
-                log.debug { "Ke account update data was done recently. Need to try again later. userId=$userId;keAccountId=$keAccountId" }
+                log.debug { "Uzum account update data was done recently. Need to try again later. userId=$userId;uzumAccountId=$uzumAccountId" }
                 return false
             }
         }
-        val jobIdentity = "ke-account-update-job-$keAccountId"
+        val jobIdentity = "ke-account-update-job-$uzumAccountId"
         val jobDetail =
             JobBuilder.newJob(UpdateAccountDataJob::class.java).withIdentity(jobIdentity).build()
         val triggerFactoryBean = SimpleTriggerFactoryBean().apply {
@@ -60,36 +60,36 @@ class UpdateKeAccountService(
             afterPropertiesSet()
         }.getObject()
         jobDetail.jobDataMap["userId"] = userId
-        jobDetail.jobDataMap["keAccountId"] = keAccountId
+        jobDetail.jobDataMap["uzumAccountId"] = uzumAccountId
         scheduler.scheduleJob(jobDetail, triggerFactoryBean)
 
         return true
     }
 
     @Transactional
-    fun updateShops(userId: String, keAccountId: UUID) {
-        val accountShops = kazanExpressSecureService.getAccountShops(userId, keAccountId)
+    fun updateShops(userId: String, uzumAccountId: UUID) {
+        val accountShops = kazanExpressSecureService.getAccountShops(userId, uzumAccountId)
         val shopIdSet = accountShops.map { it.id }.toHashSet()
-        val keAccountShops = uzumAccountShopRepository.getKeAccountShops(userId, keAccountId)
+        val uzumAccountShops = uzumAccountShopRepository.getUzumAccountShops(userId, uzumAccountId)
         val kazanExpressAccountShopIdsToRemove =
-            keAccountShops.filter { !shopIdSet.contains(it.externalShopId) }.map { it.externalShopId }
+            uzumAccountShops.filter { !shopIdSet.contains(it.externalShopId) }.map { it.externalShopId }
         uzumAccountShopRepository.deleteByShopIds(kazanExpressAccountShopIdsToRemove)
         for (accountShop in accountShops) {
             val kazanExpressAccountShopEntity =
-                uzumAccountShopRepository.getKeAccountShopByShopId(keAccountId, accountShop.id)
+                uzumAccountShopRepository.getUzumAccountShopByShopId(uzumAccountId, accountShop.id)
             if (kazanExpressAccountShopEntity != null) {
-                val updateKeShopEntity =
+                val updateUzumShopEntity =
                     kazanExpressAccountShopEntity.copy(
                         externalShopId = accountShop.id,
                         name = accountShop.shopTitle,
                         skuTitle = accountShop.skuTitle
                     )
-                uzumAccountShopRepository.save(updateKeShopEntity)
+                uzumAccountShopRepository.save(updateUzumShopEntity)
             } else {
                 uzumAccountShopRepository.save(
                     UzumAccountShopEntity(
                         id = UUID.randomUUID(),
-                        keAccountId = keAccountId,
+                        uzumAccountId = uzumAccountId,
                         externalShopId = accountShop.id,
                         name = accountShop.shopTitle,
                         skuTitle = accountShop.skuTitle
@@ -100,55 +100,55 @@ class UpdateKeAccountService(
     }
 
     @Transactional
-    fun updateShopItems(userId: String, keAccountId: UUID) {
-        val keAccountShops = uzumAccountShopRepository.getKeAccountShops(userId, keAccountId)
-        for (keAccountShop in keAccountShops) {
+    fun updateShopItems(userId: String, uzumAccountId: UUID) {
+        val uzumAccountShops = uzumAccountShopRepository.getUzumAccountShops(userId, uzumAccountId)
+        for (uzumAccountShop in uzumAccountShops) {
             var page = 0
             val shopUpdateTime = LocalDateTime.now()
             var isActive = true
             while (isActive) {
-                log.debug { "Iterate through keAccountShop. shopId=${keAccountShop.externalShopId}; page=$page" }
+                log.debug { "Iterate through uzumAccountShop. shopId=${uzumAccountShop.externalShopId}; page=$page" }
                 retryTemplate.execute<Void, Exception> {
                     Thread.sleep(Random().nextLong(1000, 4000))
-                    log.debug { "Update account shop items by shopId=${keAccountShop.externalShopId}" }
+                    log.debug { "Update account shop items by shopId=${uzumAccountShop.externalShopId}" }
                     val accountShopItems = kazanExpressSecureService.getAccountShopItems(
                         userId,
-                        keAccountId,
-                        keAccountShop.externalShopId,
+                        uzumAccountId,
+                        uzumAccountShop.externalShopId,
                         page
                     )
 
                     if (accountShopItems.isEmpty()) {
-                        log.debug { "The list of shops is over. shopId=${keAccountShop.externalShopId}" }
+                        log.debug { "The list of shops is over. shopId=${uzumAccountShop.externalShopId}" }
                         isActive = false
                         return@execute null
                     }
-                    log.debug { "Iterate through accountShopItems. shopId=${keAccountShop.externalShopId}; size=${accountShopItems.size}" }
+                    log.debug { "Iterate through accountShopItems. shopId=${uzumAccountShop.externalShopId}; size=${accountShopItems.size}" }
                     val shopItemEntities = accountShopItems.flatMap { accountShopItem ->
                         // Update product data from web KE
                         val productResponse = kazanExpressWebClient.getProductInfo(accountShopItem.productId.toString())
                         if (productResponse?.payload?.data != null) {
-                            uzumShopItemService.addShopItemFromKeData(productResponse.payload.data)
+                            uzumShopItemService.addShopItemFromUzumData(productResponse.payload.data)
                         }
                         // Update product data from LK KE
                         val productInfo = kazanExpressSecureService.getProductInfo(
                             userId,
-                            keAccountId,
-                            keAccountShop.externalShopId,
+                            uzumAccountId,
+                            uzumAccountShop.externalShopId,
                             accountShopItem.productId
                         )
                         val kazanExpressAccountShopItemEntities = accountShopItem.skuList.map { shopItemSku ->
                             val kazanExpressAccountShopItemEntity = uzumAccountShopItemRepository.findShopItem(
-                                keAccountId,
-                                keAccountShop.id!!,
+                                uzumAccountId,
+                                uzumAccountShop.id!!,
                                 accountShopItem.productId,
                                 shopItemSku.skuId
                             )
                             val photoKey = accountShopItem.image.split("/")[3]
                             UzumAccountShopItemEntity(
                                 id = kazanExpressAccountShopItemEntity?.id ?: UUID.randomUUID(),
-                                keAccountId = keAccountId,
-                                keAccountShopId = keAccountShop.id,
+                                uzumAccountId = uzumAccountId,
+                                uzumAccountShopId = uzumAccountShop.id,
                                 categoryId = productInfo.category.id,
                                 productId = accountShopItem.productId,
                                 skuId = shopItemSku.skuId,
@@ -172,8 +172,8 @@ class UpdateKeAccountService(
                     null
                 }
                 val oldItemDeletedCount = uzumAccountShopItemRepository.deleteWhereOldLastUpdate(
-                    keAccountId,
-                    keAccountShop.id!!,
+                    uzumAccountId,
+                    uzumAccountShop.id!!,
                     shopUpdateTime
                 )
                 log.debug { "Deleted $oldItemDeletedCount old products" }

@@ -1,7 +1,7 @@
 package dev.crashteam.uzumspace.service
 
 import dev.crashteam.uzumspace.ContainerConfiguration
-import dev.crashteam.uzumspace.client.uzum.KazanExpressLkClient
+import dev.crashteam.uzumspace.client.uzum.UzumLkClient
 import dev.crashteam.uzumspace.client.uzum.model.StyxResponse
 import dev.crashteam.uzumspace.client.uzum.model.lk.AuthResponse
 import dev.crashteam.uzumspace.client.uzum.model.lk.CheckTokenResponse
@@ -27,7 +27,7 @@ import java.util.*
 class UzumAccountServiceTest : ContainerConfiguration() {
 
     @MockBean
-    lateinit var kazanExpressLkClient: KazanExpressLkClient
+    lateinit var uzumLkClient: UzumLkClient
 
     @Autowired
     lateinit var uzumAccountService: UzumAccountService
@@ -45,7 +45,7 @@ class UzumAccountServiceTest : ContainerConfiguration() {
 
     @BeforeEach
     internal fun setUp() {
-        whenever(kazanExpressLkClient.auth(anyString(),  anyString(), anyString())).then {
+        whenever(uzumLkClient.auth(anyString(),  anyString(), anyString())).then {
             AuthResponse(
                 accessToken = "testAccessToken",
                 expiresIn = 99999,
@@ -54,7 +54,7 @@ class UzumAccountServiceTest : ContainerConfiguration() {
                 tokenType = "JWT"
             )
         }
-        whenever(kazanExpressLkClient.checkToken(anyString(), anyString())).then {
+        whenever(uzumLkClient.checkToken(anyString(), anyString())).then {
             StyxResponse(
                 code = 200,
                 originalStatus = 200,
@@ -80,7 +80,7 @@ class UzumAccountServiceTest : ContainerConfiguration() {
 
         // When
         assertThrows(AccountItemPoolLimitExceededException::class.java) {
-            uzumAccountService.addKeAccount(userId, login, password)
+            uzumAccountService.addUzumAccount(userId, login, password)
         }
     }
 
@@ -94,7 +94,7 @@ class UzumAccountServiceTest : ContainerConfiguration() {
         val accountEntity = accountRepository.getAccount(userId)!!
         val subscriptionEntity = accountSubscriptionRepository.findSubscriptionByPlan(SubscriptionPlan.default_)
         accountRepository.save(accountEntity.copy(subscription = subscriptionEntity))
-        val kazanExpressAccountEntity = uzumAccountService.addKeAccount(userId, login, password)
+        val kazanExpressAccountEntity = uzumAccountService.addUzumAccount(userId, login, password)
         val kePassword = Base64.getDecoder().decode(kazanExpressAccountEntity.password)
         val decryptPassword = passwordEncryptor.decryptPassword(kePassword)
 
@@ -113,10 +113,10 @@ class UzumAccountServiceTest : ContainerConfiguration() {
         val accountEntity = accountRepository.getAccount(userId)!!
         val subscriptionEntity = accountSubscriptionRepository.findSubscriptionByPlan(SubscriptionPlan.default_)
         accountRepository.save(accountEntity.copy(subscription = subscriptionEntity))
-        uzumAccountService.addKeAccount(userId, login, password)
-        uzumAccountService.addKeAccount(userId, "$login-2", password)
+        uzumAccountService.addUzumAccount(userId, login, password)
+        uzumAccountService.addUzumAccount(userId, "$login-2", password)
         assertThrows(AccountItemPoolLimitExceededException::class.java) {
-            uzumAccountService.addKeAccount(userId, login, password)
+            uzumAccountService.addUzumAccount(userId, login, password)
         }
     }
 
@@ -132,9 +132,9 @@ class UzumAccountServiceTest : ContainerConfiguration() {
         val accountEntity = accountRepository.getAccount(userId)!!
         val subscriptionEntity = accountSubscriptionRepository.findSubscriptionByPlan(SubscriptionPlan.default_)
         accountRepository.save(accountEntity.copy(subscription = subscriptionEntity))
-        val kazanExpressAccountEntity = uzumAccountService.addKeAccount(userId, login, password)
-        uzumAccountService.editKeAccount(userId, kazanExpressAccountEntity.id!!, newLogin, newPassword)
-        val keAccount = uzumAccountService.getKeAccount(userId, kazanExpressAccountEntity.id!!)
+        val kazanExpressAccountEntity = uzumAccountService.addUzumAccount(userId, login, password)
+        uzumAccountService.editUzumAccount(userId, kazanExpressAccountEntity.id!!, newLogin, newPassword)
+        val keAccount = uzumAccountService.getUzumAccount(userId, kazanExpressAccountEntity.id!!)
 
         // Then
         assertEquals(newLogin, keAccount?.login)
@@ -153,9 +153,9 @@ class UzumAccountServiceTest : ContainerConfiguration() {
         val accountEntity = accountRepository.getAccount(userId)!!
         val subscriptionEntity = accountSubscriptionRepository.findSubscriptionByPlan(SubscriptionPlan.default_)
         accountRepository.save(accountEntity.copy(subscription = subscriptionEntity))
-        val kazanExpressAccountEntity = uzumAccountService.addKeAccount(userId, login, password)
-        uzumAccountService.changeKeAccountMonitoringState(userId, kazanExpressAccountEntity.id!!, nextMonitorState)
-        val keAccount = uzumAccountService.getKeAccount(userId, kazanExpressAccountEntity.id!!)
+        val kazanExpressAccountEntity = uzumAccountService.addUzumAccount(userId, login, password)
+        uzumAccountService.changeUzumAccountMonitoringState(userId, kazanExpressAccountEntity.id!!, nextMonitorState)
+        val keAccount = uzumAccountService.getUzumAccount(userId, kazanExpressAccountEntity.id!!)
 
         // Then
         assertEquals(nextMonitorState, keAccount?.monitorState)
@@ -171,10 +171,10 @@ class UzumAccountServiceTest : ContainerConfiguration() {
         val accountEntity = accountRepository.getAccount(userId)!!
         val subscriptionEntity = accountSubscriptionRepository.findSubscriptionByPlan(SubscriptionPlan.default_)
         accountRepository.save(accountEntity.copy(subscription = subscriptionEntity))
-        uzumAccountService.addKeAccount(userId, login, password)
-        val keAccount = uzumAccountService.addKeAccount(userId, "$login-2", password)
-        uzumAccountService.removeKeAccount(userId, keAccount.id!!)
-        val keAccountCount = uzumAccountService.getKeAccounts(userId).size
+        uzumAccountService.addUzumAccount(userId, login, password)
+        val keAccount = uzumAccountService.addUzumAccount(userId, "$login-2", password)
+        uzumAccountService.removeUzumAccount(userId, keAccount.id!!)
+        val keAccountCount = uzumAccountService.getUzumAccounts(userId).size
 
         // Then
         assertEquals(1, keAccountCount)
@@ -190,9 +190,9 @@ class UzumAccountServiceTest : ContainerConfiguration() {
         val accountEntity = accountRepository.getAccount(userId)!!
         val subscriptionEntity = accountSubscriptionRepository.findSubscriptionByPlan(SubscriptionPlan.default_)
         accountRepository.save(accountEntity.copy(subscription = subscriptionEntity))
-        uzumAccountService.addKeAccount(userId, login, password)
+        uzumAccountService.addUzumAccount(userId, login, password)
         accountRepository.deleteByUserId(userId)
-        val keAccountCount = uzumAccountService.getKeAccounts(userId).size
+        val keAccountCount = uzumAccountService.getUzumAccounts(userId).size
 
         // Then
         assertEquals(0, keAccountCount)

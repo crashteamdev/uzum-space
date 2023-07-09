@@ -2,7 +2,7 @@ package dev.crashteam.uzumspace.restriction
 
 interface AccountRestriction {
 
-    fun keAccountLimit(): Int
+    fun uzumAccountLimit(): Int
 
     fun itemPoolLimit(): Int
 

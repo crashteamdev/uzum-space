@@ -24,7 +24,7 @@ private val log = KotlinLogging.logger {}
 class UzumShopItemService(
     private val uzumShopItemRepository: UzumShopItemRepository,
     private val remoteImageLoader: RemoteImageLoader,
-    private val kazanExpressWebClient: UzumWebClient,
+    private val uzumWebClient: UzumWebClient,
 ) {
 
     private val avgHash = AverageHash(64)
@@ -32,7 +32,7 @@ class UzumShopItemService(
     private val pHash = PerceptiveHash(64)
 
     @Transactional
-    fun addShopItemFromKeData(productData: ProductData) {
+    fun addShopItemFromUzumData(productData: ProductData) {
         val kazanExpressShopItemEntities = productData.skuList!!.mapNotNull { productSplit ->
             val photo: ProductPhoto = productSplit.characteristics.firstNotNullOfOrNull {
                 val productCharacteristic = productData.characteristics[it.charIndex]
@@ -73,7 +73,7 @@ class UzumShopItemService(
                         " productId=${shopItemEntity.productId}; skuId=${shopItemEntity.skuId}"
             }
             val productInfo =
-                kazanExpressWebClient.getProductInfo(shopItemEntity.productId.toString())
+                uzumWebClient.getProductInfo(shopItemEntity.productId.toString())
             if (productInfo?.payload == null) {
                 log.error {
                     "Error during try to change price case can't get product info from KE." +
@@ -103,10 +103,10 @@ class UzumShopItemService(
     fun findShopItem(productId: Long, skuId: Long): UzumShopItemEntity? {
         val keShopItemEntity = uzumShopItemRepository.findByProductIdAndSkuId(productId, skuId)
         if (keShopItemEntity == null) {
-            val productInfo = kazanExpressWebClient.getProductInfo(productId.toString())
+            val productInfo = uzumWebClient.getProductInfo(productId.toString())
             if (productInfo?.payload == null)
                 throw IllegalStateException("Failed to get product info from KE")
-            addShopItemFromKeData(productInfo.payload.data)
+            addShopItemFromUzumData(productInfo.payload.data)
         }
         return uzumShopItemRepository.findByProductIdAndSkuId(productId, skuId)
     }

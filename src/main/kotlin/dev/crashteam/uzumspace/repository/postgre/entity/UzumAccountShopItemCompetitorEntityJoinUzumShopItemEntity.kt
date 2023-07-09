@@ -2,9 +2,9 @@ package dev.crashteam.uzumspace.repository.postgre.entity
 
 import java.util.*
 
-data class UzumAccountShopItemCompetitorEntityJoinKeShopItemEntity(
+data class UzumAccountShopItemCompetitorEntityJoinUzumShopItemEntity(
     val id: UUID,
-    val keAccountShopItemId: UUID,
+    val uzumAccountShopItemId: UUID,
     val productId: Long,
     val skuId: Long,
     val name: String,

@@ -1,9 +1,9 @@
 package dev.crashteam.uzumspace.repository.postgre
 
-import dev.crashteam.uzumspace.db.model.tables.KeAccount.KE_ACCOUNT
-import dev.crashteam.uzumspace.db.model.tables.KeAccountShopItem.KE_ACCOUNT_SHOP_ITEM
-import dev.crashteam.uzumspace.db.model.tables.KeAccountShopItemCompetitor.KE_ACCOUNT_SHOP_ITEM_COMPETITOR
-import dev.crashteam.uzumspace.db.model.tables.KeShopItem.KE_SHOP_ITEM
+import dev.crashteam.uzumspace.db.model.tables.UzumAccount.UZUM_ACCOUNT
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItem.UZUM_ACCOUNT_SHOP_ITEM
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItemCompetitor.UZUM_ACCOUNT_SHOP_ITEM_COMPETITOR
+import dev.crashteam.uzumspace.db.model.tables.UzumShopItem.UZUM_SHOP_ITEM
 import dev.crashteam.uzumspace.repository.postgre.entity.UzumShopItemEntity
 import dev.crashteam.uzumspace.repository.postgre.mapper.RecordToUzumShopItemMapper
 import org.jooq.DSLContext
@@ -17,8 +17,8 @@ class UzumShopItemRepository(
     private val recordToUzumShopItemMapper: RecordToUzumShopItemMapper
 ) {
 
-    fun save(keShopItem: UzumShopItemEntity): Int {
-        val s = KE_SHOP_ITEM
+    fun save(uzumShopItem: UzumShopItemEntity): Int {
+        val s = UZUM_SHOP_ITEM
         return dsl.insertInto(
             s,
             s.PRODUCT_ID,
@@ -33,34 +33,34 @@ class UzumShopItemRepository(
             s.AVAILABLE_AMOUNT
         )
             .values(
-                keShopItem.productId,
-                keShopItem.skuId,
-                keShopItem.categoryId,
-                keShopItem.name,
-                keShopItem.photoKey,
-                keShopItem.avgHashFingerprint,
-                keShopItem.pHashFingerprint,
-                keShopItem.price,
-                keShopItem.lastUpdate,
-                keShopItem.availableAmount
+                uzumShopItem.productId,
+                uzumShopItem.skuId,
+                uzumShopItem.categoryId,
+                uzumShopItem.name,
+                uzumShopItem.photoKey,
+                uzumShopItem.avgHashFingerprint,
+                uzumShopItem.pHashFingerprint,
+                uzumShopItem.price,
+                uzumShopItem.lastUpdate,
+                uzumShopItem.availableAmount
             )
             .onDuplicateKeyUpdate()
             .set(
                 mapOf(
-                    s.CATEGORY_ID to keShopItem.categoryId,
-                    s.NAME to keShopItem.name,
-                    s.PHOTO_KEY to keShopItem.photoKey,
-                    s.AVG_HASH_FINGERPRINT to keShopItem.avgHashFingerprint,
-                    s.P_HASH_FINGERPRINT to keShopItem.pHashFingerprint,
-                    s.PRICE to keShopItem.price,
-                    s.LAST_UPDATE to keShopItem.lastUpdate,
-                    s.AVAILABLE_AMOUNT to keShopItem.availableAmount
+                    s.CATEGORY_ID to uzumShopItem.categoryId,
+                    s.NAME to uzumShopItem.name,
+                    s.PHOTO_KEY to uzumShopItem.photoKey,
+                    s.AVG_HASH_FINGERPRINT to uzumShopItem.avgHashFingerprint,
+                    s.P_HASH_FINGERPRINT to uzumShopItem.pHashFingerprint,
+                    s.PRICE to uzumShopItem.price,
+                    s.LAST_UPDATE to uzumShopItem.lastUpdate,
+                    s.AVAILABLE_AMOUNT to uzumShopItem.availableAmount
                 )
             ).execute()
     }
 
     fun saveBatch(keShopItems: List<UzumShopItemEntity>): IntArray {
-        val s = KE_SHOP_ITEM
+        val s = UZUM_SHOP_ITEM
         return dsl.batch(
             keShopItems.map { keShopItem ->
                 dsl.insertInto(
@@ -106,14 +106,14 @@ class UzumShopItemRepository(
     }
 
     fun findByProductIdAndSkuId(productId: Long, skuId: Long): UzumShopItemEntity? {
-        val s = KE_SHOP_ITEM
+        val s = UZUM_SHOP_ITEM
         return dsl.selectFrom(s)
             .where(s.PRODUCT_ID.eq(productId).and(s.SKU_ID.eq(skuId)))
             .fetchOne()?.map { recordToUzumShopItemMapper.convert(it) }
     }
 
     fun findByProductId(productId: Long): List<UzumShopItemEntity> {
-        val s = KE_SHOP_ITEM
+        val s = UZUM_SHOP_ITEM
         return dsl.selectFrom(s)
             .where(s.PRODUCT_ID.eq(productId))
             .fetch().map { recordToUzumShopItemMapper.convert(it) }
@@ -126,10 +126,10 @@ class UzumShopItemRepository(
         name: String,
         categoryId: Long,
     ): List<UzumShopItemEntity> {
-        val a = KE_ACCOUNT
-        val i = KE_ACCOUNT_SHOP_ITEM
-        val c = KE_ACCOUNT_SHOP_ITEM_COMPETITOR
-        val s = KE_SHOP_ITEM
+        val a = UZUM_ACCOUNT
+        val i = UZUM_ACCOUNT_SHOP_ITEM
+        val c = UZUM_ACCOUNT_SHOP_ITEM_COMPETITOR
+        val s = UZUM_SHOP_ITEM
         val p = s.`as`("p")
         val nested = dsl.select(
             s.PRODUCT_ID,
@@ -150,12 +150,12 @@ class UzumShopItemRepository(
             .and(s.PRODUCT_ID.notEqual(productId).and(s.SKU_ID.notEqual(skuId)))
             .andNotExists(
                 dsl.selectOne().from(c).where(
-                    c.KE_ACCOUNT_SHOP_ITEM_ID.eq(shopItemId).and(c.PRODUCT_ID.eq(s.PRODUCT_ID))
+                    c.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(shopItemId).and(c.PRODUCT_ID.eq(s.PRODUCT_ID))
                         .and(c.SKU_ID.eq(s.SKU_ID))
                 )
             )
             .andNotExists(
-                dsl.selectOne().from(i.join(a).on(i.KE_ACCOUNT_ID.eq(a.ID)))
+                dsl.selectOne().from(i.join(a).on(i.UZUM_ACCOUNT_ID.eq(a.ID)))
                     .where(i.PRODUCT_ID.eq(s.PRODUCT_ID)).and(i.SKU_ID.eq(s.SKU_ID))
             )
             .asTable("nested")
@@ -191,10 +191,10 @@ class UzumShopItemRepository(
         name: String,
         categoryId: Long,
     ): List<UzumShopItemEntity> {
-        val a = KE_ACCOUNT
-        val i = KE_ACCOUNT_SHOP_ITEM
-        val c = KE_ACCOUNT_SHOP_ITEM_COMPETITOR
-        val s = KE_SHOP_ITEM
+        val a = UZUM_ACCOUNT
+        val i = UZUM_ACCOUNT_SHOP_ITEM
+        val c = UZUM_ACCOUNT_SHOP_ITEM_COMPETITOR
+        val s = UZUM_SHOP_ITEM
         val nested = dsl.select(
             s.PRODUCT_ID,
             s.SKU_ID,
@@ -214,12 +214,12 @@ class UzumShopItemRepository(
             .and(s.PRODUCT_ID.notEqual(productId).and(s.SKU_ID.notEqual(skuId)))
             .andNotExists(
                 dsl.selectOne().from(c).where(
-                    c.KE_ACCOUNT_SHOP_ITEM_ID.eq(shopItemId).and(c.PRODUCT_ID.eq(s.PRODUCT_ID))
+                    c.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(shopItemId).and(c.PRODUCT_ID.eq(s.PRODUCT_ID))
                         .and(c.SKU_ID.eq(s.SKU_ID))
                 )
             )
             .andNotExists(
-                dsl.selectOne().from(i.join(a).on(i.KE_ACCOUNT_ID.eq(a.ID)))
+                dsl.selectOne().from(i.join(a).on(i.UZUM_ACCOUNT_ID.eq(a.ID)))
                     .where(i.PRODUCT_ID.eq(s.PRODUCT_ID)).and(i.SKU_ID.eq(s.SKU_ID))
             )
             .asTable("nested")
@@ -243,7 +243,7 @@ class UzumShopItemRepository(
         name: String,
         categoryId: Long,
     ): List<UzumShopItemEntity> {
-        val s = KE_SHOP_ITEM
+        val s = UZUM_SHOP_ITEM
         val p = s.`as`("p")
         val nested = dsl.select(
             s.PRODUCT_ID,

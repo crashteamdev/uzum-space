@@ -1,8 +1,8 @@
 package dev.crashteam.uzumspace.repository.postgre
 
-import dev.crashteam.openapi.kerepricer.model.AddStrategyRequest
-import dev.crashteam.uzumspace.db.model.tables.KeAccountShopItem.KE_ACCOUNT_SHOP_ITEM
-import dev.crashteam.uzumspace.db.model.tables.KeAccountShopItemPool.*
+import dev.crashteam.openapi.space.model.AddStrategyRequest
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItem.UZUM_ACCOUNT_SHOP_ITEM
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItemPool.*
 import dev.crashteam.uzumspace.extensions.paginate
 import dev.crashteam.uzumspace.repository.postgre.entity.UzumAccountShopItemEntity
 import dev.crashteam.uzumspace.repository.postgre.entity.PaginateEntity
@@ -25,22 +25,22 @@ class UzumAccountShopItemRepository(
 
     @Transactional
     fun saveStrategy(strategyRequest: AddStrategyRequest): Long {
-        val i = KE_ACCOUNT_SHOP_ITEM
+        val i = UZUM_ACCOUNT_SHOP_ITEM
         val strategyId = strategyRepository.save(strategyRequest)
         dsl.update(i)
-            .set(i.KE_ACCOUNT_SHOP_ITEM_STRATEGY_ID, strategyId)
-            .where(i.ID.eq(strategyRequest.keAccountShopItemId))
+            .set(i.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY_ID, strategyId)
+            .where(i.ID.eq(strategyRequest.uzumAccountShopItemId))
             .execute()
         return strategyId
     }
 
-    fun save(kazanExpressAccountShopItemEntity: UzumAccountShopItemEntity): UUID? {
-        val i = KE_ACCOUNT_SHOP_ITEM
+    fun save(uzumAccountShopItemEntity: UzumAccountShopItemEntity): UUID? {
+        val i = UZUM_ACCOUNT_SHOP_ITEM
         return dsl.insertInto(
             i,
             i.ID,
-            i.KE_ACCOUNT_ID,
-            i.KE_ACCOUNT_SHOP_ID,
+            i.UZUM_ACCOUNT_ID,
+            i.UZUM_ACCOUNT_SHOP_ID,
             i.CATEGORY_ID,
             i.PRODUCT_ID,
             i.SKU_ID,
@@ -58,54 +58,54 @@ class UzumAccountShopItemRepository(
             i.DISCOUNT,
             i.LAST_UPDATE
         ).values(
-            kazanExpressAccountShopItemEntity.id,
-            kazanExpressAccountShopItemEntity.keAccountId,
-            kazanExpressAccountShopItemEntity.keAccountShopId,
-            kazanExpressAccountShopItemEntity.categoryId,
-            kazanExpressAccountShopItemEntity.productId,
-            kazanExpressAccountShopItemEntity.skuId,
-            kazanExpressAccountShopItemEntity.name,
-            kazanExpressAccountShopItemEntity.photoKey,
-            kazanExpressAccountShopItemEntity.price,
-            kazanExpressAccountShopItemEntity.purchasePrice,
-            kazanExpressAccountShopItemEntity.barCode,
-            kazanExpressAccountShopItemEntity.productSku,
-            kazanExpressAccountShopItemEntity.skuTitle,
-            kazanExpressAccountShopItemEntity.availableAmount,
-            kazanExpressAccountShopItemEntity.minimumThreshold,
-            kazanExpressAccountShopItemEntity.maximumThreshold,
-            kazanExpressAccountShopItemEntity.step,
-            kazanExpressAccountShopItemEntity.discount,
-            kazanExpressAccountShopItemEntity.lastUpdate
+            uzumAccountShopItemEntity.id,
+            uzumAccountShopItemEntity.uzumAccountId,
+            uzumAccountShopItemEntity.uzumAccountShopId,
+            uzumAccountShopItemEntity.categoryId,
+            uzumAccountShopItemEntity.productId,
+            uzumAccountShopItemEntity.skuId,
+            uzumAccountShopItemEntity.name,
+            uzumAccountShopItemEntity.photoKey,
+            uzumAccountShopItemEntity.price,
+            uzumAccountShopItemEntity.purchasePrice,
+            uzumAccountShopItemEntity.barCode,
+            uzumAccountShopItemEntity.productSku,
+            uzumAccountShopItemEntity.skuTitle,
+            uzumAccountShopItemEntity.availableAmount,
+            uzumAccountShopItemEntity.minimumThreshold,
+            uzumAccountShopItemEntity.maximumThreshold,
+            uzumAccountShopItemEntity.step,
+            uzumAccountShopItemEntity.discount,
+            uzumAccountShopItemEntity.lastUpdate
         ).onDuplicateKeyUpdate()
             .set(
                 mapOf(
-                    i.CATEGORY_ID to kazanExpressAccountShopItemEntity.categoryId,
-                    i.PRODUCT_ID to kazanExpressAccountShopItemEntity.productId,
-                    i.SKU_ID to kazanExpressAccountShopItemEntity.skuId,
-                    i.NAME to kazanExpressAccountShopItemEntity.name,
-                    i.PHOTO_KEY to kazanExpressAccountShopItemEntity.photoKey,
-                    i.PRICE to kazanExpressAccountShopItemEntity.price,
-                    i.PURCHASE_PRICE to kazanExpressAccountShopItemEntity.purchasePrice,
-                    i.BARCODE to kazanExpressAccountShopItemEntity.barCode,
-                    i.PRODUCT_SKU to kazanExpressAccountShopItemEntity.productSku,
-                    i.SKU_TITLE to kazanExpressAccountShopItemEntity.skuTitle,
-                    i.AVAILABLE_AMOUNT to kazanExpressAccountShopItemEntity.availableAmount,
-                    i.LAST_UPDATE to kazanExpressAccountShopItemEntity.lastUpdate
+                    i.CATEGORY_ID to uzumAccountShopItemEntity.categoryId,
+                    i.PRODUCT_ID to uzumAccountShopItemEntity.productId,
+                    i.SKU_ID to uzumAccountShopItemEntity.skuId,
+                    i.NAME to uzumAccountShopItemEntity.name,
+                    i.PHOTO_KEY to uzumAccountShopItemEntity.photoKey,
+                    i.PRICE to uzumAccountShopItemEntity.price,
+                    i.PURCHASE_PRICE to uzumAccountShopItemEntity.purchasePrice,
+                    i.BARCODE to uzumAccountShopItemEntity.barCode,
+                    i.PRODUCT_SKU to uzumAccountShopItemEntity.productSku,
+                    i.SKU_TITLE to uzumAccountShopItemEntity.skuTitle,
+                    i.AVAILABLE_AMOUNT to uzumAccountShopItemEntity.availableAmount,
+                    i.LAST_UPDATE to uzumAccountShopItemEntity.lastUpdate
                 )
             ).returningResult(i.ID)
             .fetchOne()!!.getValue(i.ID)
     }
 
-    fun saveBatch(kazanExpressAccountShopItemEntity: List<UzumAccountShopItemEntity>): IntArray {
-        val i = KE_ACCOUNT_SHOP_ITEM
+    fun saveBatch(uzumAccountShopItemEntities: List<UzumAccountShopItemEntity>): IntArray {
+        val i = UZUM_ACCOUNT_SHOP_ITEM
         return dsl.batch(
-            kazanExpressAccountShopItemEntity.map { kazanExpressAccountShopItemEntity ->
+            uzumAccountShopItemEntities.map { uzumAccountShopItemEntity ->
                 dsl.insertInto(
                     i,
                     i.ID,
-                    i.KE_ACCOUNT_ID,
-                    i.KE_ACCOUNT_SHOP_ID,
+                    i.UZUM_ACCOUNT_ID,
+                    i.UZUM_ACCOUNT_SHOP_ID,
                     i.CATEGORY_ID,
                     i.PRODUCT_ID,
                     i.SKU_ID,
@@ -123,38 +123,38 @@ class UzumAccountShopItemRepository(
                     i.DISCOUNT,
                     i.LAST_UPDATE
                 ).values(
-                    kazanExpressAccountShopItemEntity.id,
-                    kazanExpressAccountShopItemEntity.keAccountId,
-                    kazanExpressAccountShopItemEntity.keAccountShopId,
-                    kazanExpressAccountShopItemEntity.categoryId,
-                    kazanExpressAccountShopItemEntity.productId,
-                    kazanExpressAccountShopItemEntity.skuId,
-                    kazanExpressAccountShopItemEntity.name,
-                    kazanExpressAccountShopItemEntity.photoKey,
-                    kazanExpressAccountShopItemEntity.price,
-                    kazanExpressAccountShopItemEntity.purchasePrice,
-                    kazanExpressAccountShopItemEntity.barCode,
-                    kazanExpressAccountShopItemEntity.productSku,
-                    kazanExpressAccountShopItemEntity.skuTitle,
-                    kazanExpressAccountShopItemEntity.availableAmount,
-                    kazanExpressAccountShopItemEntity.minimumThreshold,
-                    kazanExpressAccountShopItemEntity.maximumThreshold,
-                    kazanExpressAccountShopItemEntity.step,
-                    kazanExpressAccountShopItemEntity.discount,
-                    kazanExpressAccountShopItemEntity.lastUpdate
+                    uzumAccountShopItemEntity.id,
+                    uzumAccountShopItemEntity.uzumAccountId,
+                    uzumAccountShopItemEntity.uzumAccountShopId,
+                    uzumAccountShopItemEntity.categoryId,
+                    uzumAccountShopItemEntity.productId,
+                    uzumAccountShopItemEntity.skuId,
+                    uzumAccountShopItemEntity.name,
+                    uzumAccountShopItemEntity.photoKey,
+                    uzumAccountShopItemEntity.price,
+                    uzumAccountShopItemEntity.purchasePrice,
+                    uzumAccountShopItemEntity.barCode,
+                    uzumAccountShopItemEntity.productSku,
+                    uzumAccountShopItemEntity.skuTitle,
+                    uzumAccountShopItemEntity.availableAmount,
+                    uzumAccountShopItemEntity.minimumThreshold,
+                    uzumAccountShopItemEntity.maximumThreshold,
+                    uzumAccountShopItemEntity.step,
+                    uzumAccountShopItemEntity.discount,
+                    uzumAccountShopItemEntity.lastUpdate
                 ).onDuplicateKeyUpdate()
                     .set(
                         mapOf(
-                            i.CATEGORY_ID to kazanExpressAccountShopItemEntity.categoryId,
-                            i.NAME to kazanExpressAccountShopItemEntity.name,
-                            i.PHOTO_KEY to kazanExpressAccountShopItemEntity.photoKey,
-                            i.PRICE to kazanExpressAccountShopItemEntity.price,
-                            i.PURCHASE_PRICE to kazanExpressAccountShopItemEntity.purchasePrice,
-                            i.BARCODE to kazanExpressAccountShopItemEntity.barCode,
-                            i.AVAILABLE_AMOUNT to kazanExpressAccountShopItemEntity.availableAmount,
-                            i.LAST_UPDATE to kazanExpressAccountShopItemEntity.lastUpdate,
-                            i.PRODUCT_SKU to kazanExpressAccountShopItemEntity.productSku,
-                            i.SKU_TITLE to kazanExpressAccountShopItemEntity.skuTitle
+                            i.CATEGORY_ID to uzumAccountShopItemEntity.categoryId,
+                            i.NAME to uzumAccountShopItemEntity.name,
+                            i.PHOTO_KEY to uzumAccountShopItemEntity.photoKey,
+                            i.PRICE to uzumAccountShopItemEntity.price,
+                            i.PURCHASE_PRICE to uzumAccountShopItemEntity.purchasePrice,
+                            i.BARCODE to uzumAccountShopItemEntity.barCode,
+                            i.AVAILABLE_AMOUNT to uzumAccountShopItemEntity.availableAmount,
+                            i.LAST_UPDATE to uzumAccountShopItemEntity.lastUpdate,
+                            i.PRODUCT_SKU to uzumAccountShopItemEntity.productSku,
+                            i.SKU_TITLE to uzumAccountShopItemEntity.skuTitle
                         )
                     )
             }
@@ -162,18 +162,18 @@ class UzumAccountShopItemRepository(
     }
 
     fun findShopItem(
-        keAccountId: UUID,
-        keAccountShopId: UUID,
+        uzumAccountId: UUID,
+        uzumAccountShopId: UUID,
         productId: Long,
         skuId: Long
     ): UzumAccountShopItemEntity? {
-        val i = KE_ACCOUNT_SHOP_ITEM
-        val p = KE_ACCOUNT_SHOP_ITEM_POOL
+        val i = UZUM_ACCOUNT_SHOP_ITEM
+        val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
         val record = dsl.select()
-            .from(i.leftJoin(p).on(p.KE_ACCOUNT_SHOP_ITEM_ID.eq(i.ID)))
+            .from(i.leftJoin(p).on(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(i.ID)))
             .where(
-                i.KE_ACCOUNT_ID.eq(keAccountId),
-                i.KE_ACCOUNT_SHOP_ID.eq(keAccountShopId),
+                i.UZUM_ACCOUNT_ID.eq(uzumAccountId),
+                i.UZUM_ACCOUNT_SHOP_ID.eq(uzumAccountShopId),
                 i.PRODUCT_ID.eq(productId),
                 i.SKU_ID.eq(skuId)
             ).fetchOne() ?: return null
@@ -181,69 +181,69 @@ class UzumAccountShopItemRepository(
     }
 
     fun findShopItem(
-        keAccountId: UUID,
-        keAccountShopId: UUID,
-        keAccountShopItemId: UUID
+        uzumAccountId: UUID,
+        uzumAccountShopId: UUID,
+        uzumAccountShopItemId: UUID
     ): UzumAccountShopItemEntity? {
-        val i = KE_ACCOUNT_SHOP_ITEM
-        val p = KE_ACCOUNT_SHOP_ITEM_POOL
+        val i = UZUM_ACCOUNT_SHOP_ITEM
+        val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
         val record = dsl.select()
-            .from(i.leftJoin(p).on(p.KE_ACCOUNT_SHOP_ITEM_ID.eq(i.ID)))
+            .from(i.leftJoin(p).on(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(i.ID)))
             .where(
-                i.KE_ACCOUNT_ID.eq(keAccountId),
-                i.KE_ACCOUNT_SHOP_ID.eq(keAccountShopId),
-                i.ID.eq(keAccountShopItemId),
+                i.UZUM_ACCOUNT_ID.eq(uzumAccountId),
+                i.UZUM_ACCOUNT_SHOP_ID.eq(uzumAccountShopId),
+                i.ID.eq(uzumAccountShopItemId),
             ).fetchOne() ?: return null
         return recordToUzumAccountShopItemEntityMapper.convert(record)
     }
 
     fun findShopItem(
-        keAccountId: UUID,
-        keAccountShopItemId: UUID
+        uzumAccountId: UUID,
+        uzumAccountShopItemId: UUID
     ): UzumAccountShopItemEntity? {
-        val i = KE_ACCOUNT_SHOP_ITEM
-        val p = KE_ACCOUNT_SHOP_ITEM_POOL
+        val i = UZUM_ACCOUNT_SHOP_ITEM
+        val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
         val record = dsl.select()
-            .from(i.leftJoin(p).on(p.KE_ACCOUNT_SHOP_ITEM_ID.eq(i.ID)))
+            .from(i.leftJoin(p).on(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(i.ID)))
             .where(
-                i.KE_ACCOUNT_ID.eq(keAccountId),
-                i.ID.eq(keAccountShopItemId),
+                i.UZUM_ACCOUNT_ID.eq(uzumAccountId),
+                i.ID.eq(uzumAccountShopItemId),
             ).fetchOne() ?: return null
         return recordToUzumAccountShopItemEntityMapper.convert(record)
     }
 
     fun findAllItems(
-        keAccountId: UUID,
-        keAccountShopId: UUID
+        uzumAccountId: UUID,
+        uzumAccountShopId: UUID
     ): MutableList<UzumAccountShopItemEntity> {
-        val i = KE_ACCOUNT_SHOP_ITEM
+        val i = UZUM_ACCOUNT_SHOP_ITEM
         val records = dsl.selectFrom(i)
             .where(
-                i.KE_ACCOUNT_ID.eq(keAccountId),
-                i.KE_ACCOUNT_SHOP_ID.eq(keAccountShopId)
+                i.UZUM_ACCOUNT_ID.eq(uzumAccountId),
+                i.UZUM_ACCOUNT_SHOP_ID.eq(uzumAccountShopId)
             ).fetch()
         return records.map { recordToUzumAccountShopItemEntityMapper.convert(it) }
     }
 
     fun findShopItems(
-        keAccountId: UUID,
-        keAccountShopId: UUID,
+        uzumAccountId: UUID,
+        uzumAccountShopId: UUID,
         filter: Condition? = null,
         sortFields: List<Pair<Field<*>, SortType>>? = null,
         limit: Long,
         offset: Long,
     ): MutableList<PaginateEntity<UzumAccountShopItemEntity>> {
-        val i = KE_ACCOUNT_SHOP_ITEM
-        val p = KE_ACCOUNT_SHOP_ITEM_POOL
-        var select = dsl.selectFrom(i.leftJoin(p).on(p.KE_ACCOUNT_SHOP_ITEM_ID.eq(i.ID)))
+        val i = UZUM_ACCOUNT_SHOP_ITEM
+        val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
+        var select = dsl.selectFrom(i.leftJoin(p).on(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(i.ID)))
             .where(
-                i.KE_ACCOUNT_ID.eq(keAccountId),
-                i.KE_ACCOUNT_SHOP_ID.eq(keAccountShopId)
+                i.UZUM_ACCOUNT_ID.eq(uzumAccountId),
+                i.UZUM_ACCOUNT_SHOP_ID.eq(uzumAccountShopId)
             )
         if (filter != null) {
             select = select.and(filter)
         }
-        val sortFields = sortFields ?: listOf(KE_ACCOUNT_SHOP_ITEM.ID to SortType.ASC)
+        val sortFields = sortFields ?: listOf(UZUM_ACCOUNT_SHOP_ITEM.ID to SortType.ASC)
         val records = dsl.paginate(select, sortFields, limit, offset).fetch()
         val items = records.map {
             PaginateEntity(
@@ -258,40 +258,40 @@ class UzumAccountShopItemRepository(
     }
 
     fun findShopItems(
-        keAccountId: UUID,
-        keAccountShopId: UUID
+        uzumAccountId: UUID,
+        uzumAccountShopId: UUID
     ): List<UzumAccountShopItemEntity> {
-        val i = KE_ACCOUNT_SHOP_ITEM
-        val p = KE_ACCOUNT_SHOP_ITEM_POOL
-        val records = dsl.selectFrom(i.leftJoin(p).on(p.KE_ACCOUNT_SHOP_ITEM_ID.eq(i.ID)))
+        val i = UZUM_ACCOUNT_SHOP_ITEM
+        val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
+        val records = dsl.selectFrom(i.leftJoin(p).on(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(i.ID)))
             .where(
-                i.KE_ACCOUNT_ID.eq(keAccountId),
-                i.KE_ACCOUNT_SHOP_ID.eq(keAccountShopId)
+                i.UZUM_ACCOUNT_ID.eq(uzumAccountId),
+                i.UZUM_ACCOUNT_SHOP_ID.eq(uzumAccountShopId)
             )
             .fetch()
 
         return records.map { recordToUzumAccountShopItemEntityMapper.convert(it) }
     }
 
-    fun deleteWhereOldLastUpdate(keAccountId: UUID, keAccountShopId: UUID, lastUpdateTime: LocalDateTime): Int {
-        val i = KE_ACCOUNT_SHOP_ITEM
+    fun deleteWhereOldLastUpdate(uzumAccountId: UUID, uzumAccountShopId: UUID, lastUpdateTime: LocalDateTime): Int {
+        val i = UZUM_ACCOUNT_SHOP_ITEM
         return dsl.deleteFrom(i)
             .where(
-                i.KE_ACCOUNT_ID.eq(keAccountId)
-                    .and(i.KE_ACCOUNT_SHOP_ID.eq(keAccountShopId))
+                i.UZUM_ACCOUNT_ID.eq(uzumAccountId)
+                    .and(i.UZUM_ACCOUNT_SHOP_ID.eq(uzumAccountShopId))
                     .and(i.LAST_UPDATE.lessThan(lastUpdateTime))
             ).execute()
     }
 
     fun updatePriceChangeOptions(
-        keAccountId: UUID,
-        keAccountShopItemId: UUID,
+        uzumAccountId: UUID,
+        uzumAccountShopItemId: UUID,
         step: Int,
         minimumThreshold: Long,
         maximumThreshold: Long,
         discount: BigDecimal,
     ): Int {
-        val i = KE_ACCOUNT_SHOP_ITEM
+        val i = UZUM_ACCOUNT_SHOP_ITEM
         return dsl.update(i)
             .set(
                 mapOf(
@@ -301,7 +301,7 @@ class UzumAccountShopItemRepository(
                     i.DISCOUNT to discount,
                 )
             )
-            .where(i.KE_ACCOUNT_ID.eq(keAccountId).and(i.ID.eq(keAccountShopItemId)))
+            .where(i.UZUM_ACCOUNT_ID.eq(uzumAccountId).and(i.ID.eq(uzumAccountShopItemId)))
             .execute()
     }
 

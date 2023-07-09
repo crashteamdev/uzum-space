@@ -30,7 +30,7 @@ class UzumShopItemPriceChangeMasterJob : QuartzJobBean() {
                 setMisfireInstruction(SimpleTrigger.MISFIRE_INSTRUCTION_FIRE_NOW)
                 afterPropertiesSet()
             }.getObject()
-            jobDetail.jobDataMap["keAccountId"] = kazanExpressAccountEntity.id
+            jobDetail.jobDataMap["uzumAccountId"] = kazanExpressAccountEntity.id
             try {
                 val schedulerFactoryBean = applicationContext.getBean(Scheduler::class.java)
                 schedulerFactoryBean.scheduleJob(jobDetail, triggerFactoryBean)

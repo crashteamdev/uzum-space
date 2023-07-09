@@ -4,6 +4,6 @@ import java.time.LocalDateTime
 import java.util.*
 
 data class UzumAccountShopItemPoolEntity(
-    val keAccountShopItemId: UUID,
+    val uzumAccountShopItemId: UUID,
     val lastCheck: LocalDateTime? = null
 )

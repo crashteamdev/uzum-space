@@ -5,9 +5,9 @@ import java.time.LocalDateTime
 import java.util.*
 
 data class UzumAccountShopItemPoolFilledEntity(
-    val keAccountShopItemId: UUID,
-    val keAccountId: UUID,
-    val keAccountShopId: UUID,
+    val uzumAccountShopItemId: UUID,
+    val uzumAccountId: UUID,
+    val uzumAccountShopId: UUID,
     val productId: Long,
     val skuId: Long,
     val productSku: String,

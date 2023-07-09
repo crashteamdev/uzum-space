@@ -35,10 +35,10 @@ class AccountSubscriptionRestrictionValidator(
 
         if (accountEntity.subscription == null) return false
 
-        val keAccountCount = uzumAccountRepository.getUzumAccountsCount(userId)
+        val uzumAccountCount = uzumAccountRepository.getUzumAccountsCount(userId)
         val accountRestriction = subscriptionPlanResolver.toAccountRestriction(accountEntity.subscription.plan)
-        val keAccountLimit = accountRestriction.keAccountLimit()
-        val isKeAccountLimitExceeded = keAccountCount >= keAccountLimit
+        val uzumAccountLimit = accountRestriction.uzumAccountLimit()
+        val isKeAccountLimitExceeded = uzumAccountCount >= uzumAccountLimit
 
         return !isKeAccountLimitExceeded
     }
@@ -58,13 +58,13 @@ class AccountSubscriptionRestrictionValidator(
     }
 
     fun validateChangeSubscriptionLevel(userId: String, targetSubscriptionPlan: SubscriptionPlan): Boolean {
-        val keAccountCount = uzumAccountRepository.getUzumAccountsCount(userId)
+        val uzumAccountCount = uzumAccountRepository.getUzumAccountsCount(userId)
         val itemsInPoolCount = uzumAccountShopItemPoolRepository.findCountShopItemsInPoolForUser(userId)
         val accountRestriction = subscriptionPlanResolver.toAccountRestriction(targetSubscriptionPlan)
         // TODO: add item competitor limit
-        val keAccountLimit = accountRestriction.keAccountLimit()
+        val uzumAccountLimit = accountRestriction.uzumAccountLimit()
         val itemPoolLimit = accountRestriction.itemPoolLimit()
-        if (keAccountCount > keAccountLimit) {
+        if (uzumAccountCount > uzumAccountLimit) {
             return false
         }
         if (itemsInPoolCount > itemPoolLimit) {

@@ -3,6 +3,7 @@ package dev.crashteam.uzumspace.repository.postgre.mapper
 import dev.crashteam.uzumspace.db.model.tables.Subscription.SUBSCRIPTION
 import dev.crashteam.uzumspace.repository.postgre.entity.SubscriptionEntity
 import org.springframework.stereotype.Component
+import org.jooq.Record
 
 @Component
 class RecordToSubscriptionEntityMapper : RecordMapper<SubscriptionEntity> {

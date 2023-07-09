@@ -1,10 +1,7 @@
 package dev.crashteam.uzumspace.controller
 
-import dev.crashteam.openapi.kerepricer.api.StrategiesApi
-import dev.crashteam.openapi.kerepricer.model.AddStrategyRequest
-import dev.crashteam.openapi.kerepricer.model.KeAccountShopItemStrategy
-import dev.crashteam.openapi.kerepricer.model.PatchStrategy
-import dev.crashteam.openapi.kerepricer.model.StrategyType
+import dev.crashteam.openapi.space.api.StrategiesApi
+import dev.crashteam.openapi.space.model.*
 import dev.crashteam.uzumspace.service.UzumShopItemStrategyService
 import org.springframework.core.convert.ConversionService
 import org.springframework.http.HttpStatus
@@ -28,11 +25,11 @@ class StrategyController(
         xRequestID: UUID?,
         addStrategyRequest: Mono<AddStrategyRequest>?,
         exchange: ServerWebExchange?
-    ): Mono<ResponseEntity<KeAccountShopItemStrategy>>? {
+    ): Mono<ResponseEntity<UzumAccountShopItemStrategy>>? {
         return addStrategyRequest?.flatMap {
             val strategyId = uzumShopItemStrategyService.saveStrategy(it)
             val strategy = uzumShopItemStrategyService.findStrategy(strategyId)
-            val itemStrategy = conversionService.convert(strategy, KeAccountShopItemStrategy::class.java)
+            val itemStrategy = conversionService.convert(strategy, UzumAccountShopItemStrategy::class.java)
             return@flatMap ResponseEntity.status(HttpStatus.CREATED).body(itemStrategy).toMono()
         }
     }
@@ -56,11 +53,11 @@ class StrategyController(
         xRequestID: UUID?,
         shopItemStrategyId: Long?,
         exchange: ServerWebExchange?
-    ): Mono<ResponseEntity<KeAccountShopItemStrategy>> {
+    ): Mono<ResponseEntity<UzumAccountShopItemStrategy>> {
         if (shopItemStrategyId != null) {
             exchange?.getPrincipal<Principal>()?.flatMap {
                 val strategy = uzumShopItemStrategyService.findStrategy(shopItemStrategyId)
-                val strategyDto = conversionService.convert(strategy, KeAccountShopItemStrategy::class.java)
+                val strategyDto = conversionService.convert(strategy, UzumAccountShopItemStrategy::class.java)
                 return@flatMap ResponseEntity.ok().body(strategyDto).toMono()
             }
         }
@@ -72,12 +69,12 @@ class StrategyController(
         shopItemStrategyId: Long?,
         patchStrategy: Mono<PatchStrategy>?,
         exchange: ServerWebExchange?
-    ): Mono<ResponseEntity<KeAccountShopItemStrategy>> {
+    ): Mono<ResponseEntity<UzumAccountShopItemStrategy>> {
         if (shopItemStrategyId != null) {
             patchStrategy?.flatMap {
                 uzumShopItemStrategyService.updateStrategy(shopItemStrategyId, it)
                 val strategy = uzumShopItemStrategyService.findStrategy(shopItemStrategyId)
-                val itemStrategy = conversionService.convert(strategy, KeAccountShopItemStrategy::class.java)
+                val itemStrategy = conversionService.convert(strategy, UzumAccountShopItemStrategy::class.java)
 
                 uzumShopItemStrategyService.deleteStrategy(shopItemStrategyId)
                 return@flatMap ResponseEntity.ok().body(itemStrategy).toMono()

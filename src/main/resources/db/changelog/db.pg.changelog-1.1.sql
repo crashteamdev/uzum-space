@@ -12,5 +12,5 @@ BEGIN
 END
 ' LANGUAGE plpgsql;
 
---changeset vitaxa:create-ke_account_shop_item_name_idx
-CREATE INDEX IF NOT EXISTS ke_account_shop_item_name ON ke_account_shop_item (name);
+--changeset vitaxa:create-uzum_account_shop_item_name_idx
+CREATE INDEX IF NOT EXISTS uzum_account_shop_item_name ON uzum_account_shop_item (name);

@@ -1,10 +1,10 @@
 package dev.crashteam.uzumspace.repository.postgre
 
 import dev.crashteam.uzumspace.db.model.tables.Account.ACCOUNT
-import dev.crashteam.uzumspace.db.model.tables.KeAccount.KE_ACCOUNT
-import dev.crashteam.uzumspace.db.model.tables.KeAccountShop.KE_ACCOUNT_SHOP
-import dev.crashteam.uzumspace.db.model.tables.KeAccountShopItem.KE_ACCOUNT_SHOP_ITEM
-import dev.crashteam.uzumspace.db.model.tables.KeAccountShopItemPool.KE_ACCOUNT_SHOP_ITEM_POOL
+import dev.crashteam.uzumspace.db.model.tables.UzumAccount.UZUM_ACCOUNT
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShop.UZUM_ACCOUNT_SHOP
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItem.UZUM_ACCOUNT_SHOP_ITEM
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItemPool.UZUM_ACCOUNT_SHOP_ITEM_POOL
 import dev.crashteam.uzumspace.extensions.paginate
 import dev.crashteam.uzumspace.repository.postgre.entity.UzumAccountShopItemEntity
 import dev.crashteam.uzumspace.repository.postgre.entity.UzumAccountShopItemPoolEntity
@@ -25,44 +25,44 @@ class UzumAccountShopItemPoolRepository(
 ) {
 
     fun save(kazanExpressAccountShopItemPoolEntity: UzumAccountShopItemPoolEntity): Int {
-        val p = KE_ACCOUNT_SHOP_ITEM_POOL
+        val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
         return dsl.insertInto(
             p,
-            p.KE_ACCOUNT_SHOP_ITEM_ID,
+            p.UZUM_ACCOUNT_SHOP_ITEM_ID,
             p.LAST_CHECK
         ).values(
-            kazanExpressAccountShopItemPoolEntity.keAccountShopItemId,
+            kazanExpressAccountShopItemPoolEntity.uzumAccountShopItemId,
             kazanExpressAccountShopItemPoolEntity.lastCheck
         ).onDuplicateKeyIgnore().execute()
     }
 
-    fun updateLastCheck(keAccountShopItemId: UUID, lastCheck: LocalDateTime): Int {
-        val p = KE_ACCOUNT_SHOP_ITEM_POOL
+    fun updateLastCheck(uzumAccountShopItemId: UUID, lastCheck: LocalDateTime): Int {
+        val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
         return dsl.update(p)
             .set(p.LAST_CHECK, lastCheck)
-            .where(p.KE_ACCOUNT_SHOP_ITEM_ID.eq(keAccountShopItemId))
+            .where(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(uzumAccountShopItemId))
             .execute()
     }
 
-    fun delete(keAccountShopItemId: UUID): Int {
-        val p = KE_ACCOUNT_SHOP_ITEM_POOL
+    fun delete(uzumAccountShopItemId: UUID): Int {
+        val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
         return dsl.deleteFrom(p)
-            .where(p.KE_ACCOUNT_SHOP_ITEM_ID.eq(keAccountShopItemId))
+            .where(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(uzumAccountShopItemId))
             .execute()
     }
 
     fun findCountShopItemsInPoolForUser(userId: String): Int {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
-        val s = KE_ACCOUNT_SHOP
-        val i = KE_ACCOUNT_SHOP_ITEM
-        val p = KE_ACCOUNT_SHOP_ITEM_POOL
+        val k = UZUM_ACCOUNT
+        val s = UZUM_ACCOUNT_SHOP
+        val i = UZUM_ACCOUNT_SHOP_ITEM
+        val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
         return dsl.fetchCount(
             dsl.selectFrom(
                 a.join(k).on(k.ACCOUNT_ID.eq(a.ID))
-                    .join(s).on(s.KE_ACCOUNT_ID.eq(k.ID))
-                    .join(i).on(s.ID.eq(i.KE_ACCOUNT_SHOP_ID))
-                    .join(p).on(i.ID.eq(p.KE_ACCOUNT_SHOP_ITEM_ID))
+                    .join(s).on(s.UZUM_ACCOUNT_ID.eq(k.ID))
+                    .join(i).on(s.ID.eq(i.UZUM_ACCOUNT_SHOP_ID))
+                    .join(p).on(i.ID.eq(p.UZUM_ACCOUNT_SHOP_ITEM_ID))
             )
                 .where(a.USER_ID.eq(userId))
         )
@@ -70,29 +70,29 @@ class UzumAccountShopItemPoolRepository(
 
     fun findShopItemInPool(
         userId: String,
-        keAccountId: UUID,
-        keAccountShopId: UUID,
+        uzumAccountId: UUID,
+        uzumAccountShopId: UUID,
         filter: Condition? = null,
         sortFields: List<Pair<Field<*>, SortType>>? = null,
         limit: Long,
         offset: Long
     ): List<PaginateEntity<UzumAccountShopItemEntity>> {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
-        val s = KE_ACCOUNT_SHOP
-        val i = KE_ACCOUNT_SHOP_ITEM
-        val p = KE_ACCOUNT_SHOP_ITEM_POOL
-        var select = dsl.select(*KE_ACCOUNT_SHOP_ITEM.fields(), p.KE_ACCOUNT_SHOP_ITEM_ID)
+        val k = UZUM_ACCOUNT
+        val s = UZUM_ACCOUNT_SHOP
+        val i = UZUM_ACCOUNT_SHOP_ITEM
+        val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
+        var select = dsl.select(*UZUM_ACCOUNT_SHOP_ITEM.fields(), p.UZUM_ACCOUNT_SHOP_ITEM_ID)
             .from(i)
-            .join(p).on(p.KE_ACCOUNT_SHOP_ITEM_ID.eq(i.ID))
-            .join(s).on(i.KE_ACCOUNT_SHOP_ID.eq(s.ID))
-            .join(k).on(s.KE_ACCOUNT_ID.eq(k.ID))
+            .join(p).on(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(i.ID))
+            .join(s).on(i.UZUM_ACCOUNT_SHOP_ID.eq(s.ID))
+            .join(k).on(s.UZUM_ACCOUNT_ID.eq(k.ID))
             .join(a).on(k.ACCOUNT_ID.eq(a.ID))
-            .where(a.USER_ID.eq(userId).and(k.ID.eq(keAccountId).and(s.ID.eq(keAccountShopId))))
+            .where(a.USER_ID.eq(userId).and(k.ID.eq(uzumAccountId).and(s.ID.eq(uzumAccountShopId))))
         if (filter != null) {
             select = select.and(filter)
         }
-        val sortFields = sortFields ?: listOf(KE_ACCOUNT_SHOP_ITEM.ID to SortType.ASC)
+        val sortFields = sortFields ?: listOf(UZUM_ACCOUNT_SHOP_ITEM.ID to SortType.ASC)
         val records = dsl.paginate(select, sortFields, limit, offset).fetch()
 
         val items = records.map {
@@ -109,15 +109,15 @@ class UzumAccountShopItemPoolRepository(
 
     fun findShopItemInPool(
         userId: String,
-        keAccountId: UUID
+        uzumAccountId: UUID
     ): List<UzumAccountShopItemPoolFilledEntity> {
         val a = ACCOUNT
-        val k = KE_ACCOUNT
-        val s = KE_ACCOUNT_SHOP
-        val i = KE_ACCOUNT_SHOP_ITEM
-        val p = KE_ACCOUNT_SHOP_ITEM_POOL
+        val k = UZUM_ACCOUNT
+        val s = UZUM_ACCOUNT_SHOP
+        val i = UZUM_ACCOUNT_SHOP_ITEM
+        val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
         return dsl.select(
-            p.KE_ACCOUNT_SHOP_ITEM_ID,
+            p.UZUM_ACCOUNT_SHOP_ITEM_ID,
             k.ID.`as`("ke_account_id"),
             s.ID.`as`("ke_account_shop_id"),
             i.PRODUCT_ID,
@@ -133,19 +133,19 @@ class UzumAccountShopItemPoolRepository(
             i.SKU_TITLE,
             i.BARCODE,
             p.LAST_CHECK,
-            i.KE_ACCOUNT_SHOP_ITEM_STRATEGY_ID
+            i.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY_ID
         )
             .from(i)
-            .join(p).on(p.KE_ACCOUNT_SHOP_ITEM_ID.eq(i.ID))
-            .join(s).on(i.KE_ACCOUNT_SHOP_ID.eq(s.ID))
-            .join(k).on(s.KE_ACCOUNT_ID.eq(k.ID))
+            .join(p).on(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(i.ID))
+            .join(s).on(i.UZUM_ACCOUNT_SHOP_ID.eq(s.ID))
+            .join(k).on(s.UZUM_ACCOUNT_ID.eq(k.ID))
             .join(a).on(k.ACCOUNT_ID.eq(a.ID))
-            .where(a.USER_ID.eq(userId).and(k.ID.eq(keAccountId)))
+            .where(a.USER_ID.eq(userId).and(k.ID.eq(uzumAccountId)))
             .fetch().map { record ->
                 UzumAccountShopItemPoolFilledEntity(
-                    keAccountShopItemId = record.getValue(p.KE_ACCOUNT_SHOP_ITEM_ID),
-                    keAccountId = record.getValue(k.ID.`as`("ke_account_id")),
-                    keAccountShopId = record.getValue(s.ID.`as`("ke_account_shop_id")),
+                    uzumAccountShopItemId = record.getValue(p.UZUM_ACCOUNT_SHOP_ITEM_ID),
+                    uzumAccountId = record.getValue(k.ID.`as`("ke_account_id")),
+                    uzumAccountShopId = record.getValue(s.ID.`as`("ke_account_shop_id")),
                     productId = record.getValue(i.PRODUCT_ID),
                     skuId = record.getValue(i.SKU_ID),
                     productSku = record.getValue(i.PRODUCT_SKU),
@@ -159,7 +159,7 @@ class UzumAccountShopItemPoolRepository(
                     skuTitle = record.getValue(i.SKU_TITLE),
                     barcode = record.getValue(i.BARCODE),
                     lastCheck = record.getValue(p.LAST_CHECK),
-                    strategyId = record.getValue(i.KE_ACCOUNT_SHOP_ITEM_STRATEGY_ID)
+                    strategyId = record.getValue(i.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY_ID)
                 )
             }
     }

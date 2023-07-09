@@ -14,12 +14,12 @@ class EqualPriceChangeCalculatorStrategy(
     private val uzumShopItemService: UzumShopItemService
 ) : PriceChangeCalculatorStrategy {
     override fun calculatePrice(
-        keAccountShopItemId: UUID,
+        uzumAccountShopItemId: UUID,
         sellPriceMinor: BigDecimal,
         options: CalculatorOptions?
     ): CalculationResult? {
         val shopItemCompetitors: List<UzumAccountShopItemCompetitorEntity> =
-            uzumAccountShopItemCompetitorRepository.findShopItemCompetitors(keAccountShopItemId)
+            uzumAccountShopItemCompetitorRepository.findShopItemCompetitors(uzumAccountShopItemId)
         val minimalPriceCompetitor: ShopItemCompetitor = shopItemCompetitors.mapNotNull {
             val shopItemEntity = uzumShopItemService.findShopItem(
                 it.productId,
