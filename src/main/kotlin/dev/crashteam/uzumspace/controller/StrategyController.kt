@@ -15,7 +15,7 @@ import java.security.Principal
 import java.util.*
 
 @RestController
-@RequestMapping("repricer/v1")
+@RequestMapping("/v1/repricer")
 class StrategyController(
     private val uzumShopItemStrategyService: UzumShopItemStrategyService,
     private val conversionService: ConversionService
