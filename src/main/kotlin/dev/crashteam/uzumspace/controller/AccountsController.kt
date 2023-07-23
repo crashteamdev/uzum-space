@@ -31,7 +31,7 @@ import java.util.*
 private val log = KotlinLogging.logger {}
 
 @RestController
-@RequestMapping("reprider/v1")
+@RequestMapping("repricer/v1")
 class AccountsController(
     private val uzumAccountService: UzumAccountService,
     private val uzumAccountShopService: UzumAccountShopService,
