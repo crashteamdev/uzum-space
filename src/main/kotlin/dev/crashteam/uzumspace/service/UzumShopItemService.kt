@@ -43,7 +43,7 @@ class UzumShopItemService(
             } ?: productData.photos.firstOrNull() ?: return@mapNotNull null // Ignore empty photo item
 
             val url =
-                "https://ke-images.servicecdn.ru/${photo.photoKey}/t_product_240_high.jpg" // TODO: avoid static url
+                "https://images.uzum.uz/${photo.photoKey}/t_product_240_high.jpg" // TODO: avoid static url
             val imageFingerprints = generateImageFingerprints(url)
             val characteristics = productSplit.characteristics.joinToString {
                 val productCharacteristic = productData.characteristics[it.charIndex]
