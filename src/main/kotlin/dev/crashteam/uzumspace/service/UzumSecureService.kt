@@ -101,7 +101,7 @@ class UzumSecureService(
             RecentAuthUserToken(authResponse.accessToken, authResponse.refreshToken)
         }
 
-        return recentUserToken.accessToken
+        return recentUserToken.accessToken.trim()
     }
 
     private data class RecentAuthUserToken(
