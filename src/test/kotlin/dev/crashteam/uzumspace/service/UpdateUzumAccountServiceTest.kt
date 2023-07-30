@@ -196,7 +196,7 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
         ).then { listOf(uzumShopItem) }.then { emptyList<AccountShopItem>() }
         val accountProductInfo = AccountProductInfo(
             category = AccountProductCategory(1, "test"),
-            title = "test",
+            title = AccountTitleInfo("test", "test"),
             skuTitle = "test"
         )
         whenever(
