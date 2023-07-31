@@ -16,7 +16,6 @@ import org.springframework.web.client.RestTemplate
 import org.springframework.web.client.exchange
 import java.net.URLEncoder
 import java.util.*
-import kotlin.collections.HashMap
 
 
 private val log = KotlinLogging.logger {}
@@ -40,6 +39,7 @@ class UzumLkClient(
                 HttpMethod.GET,
                 HttpEntity<Void>(headers)
             )
+        log.debug { "Get account shops. userId=$userId; userToken=$userToken; response=$responseEntity" }
 
         return handleResponse(responseEntity)
     }
@@ -62,6 +62,10 @@ class UzumLkClient(
                 HttpMethod.GET,
                 HttpEntity<Void>(headers)
             )
+        log.debug {
+            "Get account shop items response." +
+                    " userId=$userId; userToken=$userToken; shopId=$shopId; response=$responseEntity"
+        }
 
         return handleResponse(responseEntity).productList
     }
@@ -84,6 +88,10 @@ class UzumLkClient(
                 HttpMethod.POST,
                 HttpEntity<ShopItemPriceChangePayload>(payload, headers)
             )
+        log.debug {
+            "Change account shop item price response." +
+                    " userId=$userId; userToken=$userToken; shopId=$shopId; response=$responseEntity"
+        }
         if (!responseEntity.statusCode.is2xxSuccessful) {
             log.warn {
                 "Bad response while trying to change item price." +
@@ -107,6 +115,10 @@ class UzumLkClient(
                 HttpMethod.GET,
                 HttpEntity<Void>(headers)
             )
+        log.debug {
+            "Get product info response." +
+                    " userId=$userId; userToken=$userToken; shopId=$shopId; productId=$productId; response=$responseEntity"
+        }
 
         return handleResponse(responseEntity)
     }
@@ -128,6 +140,10 @@ class UzumLkClient(
                 HttpMethod.GET,
                 HttpEntity<Void>(headers)
             )
+        log.debug {
+            "Get product description response." +
+                    " userId=$userId; userToken=$userToken; shopId=$shopId; response=$responseEntity"
+        }
 
         return handleResponse(responseEntity)
     }
@@ -164,6 +180,7 @@ class UzumLkClient(
             HttpEntity<ProxyRequestBody>(proxyRequestBody),
             responseType
         ).body
+        log.debug { "Get styx auth response. userId=$userId; username=$username; response=$styxResponse" }
 
         return handleProxyResponse(styxResponse!!)!!
     }
@@ -185,6 +202,7 @@ class UzumLkClient(
                 HttpMethod.POST,
                 HttpEntity(map, headers)
             )
+        log.debug { "Get refresh auth response. userId=$userId; refreshToken=$refreshToken; response=$responseEntity" }
 
         return responseEntity
     }
@@ -205,6 +223,7 @@ class UzumLkClient(
                 HttpMethod.POST,
                 HttpEntity(map, headers)
             )
+        log.debug { "Check token response. userId=$userId; token=$token; response=$responseEntity" }
 
         return responseEntity
     }
@@ -253,7 +272,5 @@ class UzumLkClient(
     companion object {
         const val basicAuthToken = "YjJjLWZyb250OmNsaWVudFNlY3JldA=="
         const val USER_ID_HEADER = "X-USER-ID"
-        const val USER_AGENT =
-            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
     }
 }

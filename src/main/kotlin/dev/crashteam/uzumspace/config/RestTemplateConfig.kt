@@ -27,19 +27,33 @@ class RestTemplateConfig {
 
     @Bean
     fun lkRestTemplate(
-        proxyHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
+        simpleHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
         cookieHeaderRequestInterceptor: CookieHeaderRequestInterceptor
     ): RestTemplate {
-        val restTemplate = RestTemplate(proxyHttpRequestFactory)
+        val restTemplate = RestTemplate(simpleHttpRequestFactory)
         restTemplate.errorHandler = object : DefaultResponseErrorHandler() {
             override fun hasError(statusCode: HttpStatus): Boolean {
                 return false
             }
         }
         restTemplate.interceptors.add(RemoveHeaderHttpRequestInterceptor())
-        //restTemplate.interceptors.add(cookieHeaderRequestInterceptor)
         return restTemplate
     }
+
+//    @Bean
+//    fun lkRestTemplate(
+//        proxyHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
+//        cookieHeaderRequestInterceptor: CookieHeaderRequestInterceptor
+//    ): RestTemplate {
+//        val restTemplate = RestTemplate(proxyHttpRequestFactory)
+//        restTemplate.errorHandler = object : DefaultResponseErrorHandler() {
+//            override fun hasError(statusCode: HttpStatus): Boolean {
+//                return false
+//            }
+//        }
+//        restTemplate.interceptors.add(cookieHeaderRequestInterceptor)
+//        return restTemplate
+//    }
 
     class RemoveHeaderHttpRequestInterceptor : ClientHttpRequestInterceptor {
         override fun intercept(
