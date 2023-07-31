@@ -10,7 +10,6 @@ import org.springframework.http.client.*
 import org.springframework.web.client.DefaultResponseErrorHandler
 import org.springframework.web.client.RestTemplate
 
-
 @Configuration
 class RestTemplateConfig {
 
@@ -27,10 +26,10 @@ class RestTemplateConfig {
 
     @Bean
     fun lkRestTemplate(
-        simpleHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
+        proxyHttpRequestFactory: HttpComponentsClientHttpRequestFactory,
         cookieHeaderRequestInterceptor: CookieHeaderRequestInterceptor
     ): RestTemplate {
-        val restTemplate = RestTemplate(simpleHttpRequestFactory)
+        val restTemplate = RestTemplate(proxyHttpRequestFactory)
         restTemplate.errorHandler = object : DefaultResponseErrorHandler() {
             override fun hasError(statusCode: HttpStatus): Boolean {
                 return false

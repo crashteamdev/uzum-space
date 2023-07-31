@@ -30,7 +30,7 @@ class UzumLkClient(
     override fun getAccountShops(userId: String, userToken: String): List<AccountShop> {
         val headers = HttpHeaders().apply {
             set("Authorization", "Bearer $userToken")
-            set("User-Agent", RandomUserAgent.getRandomUserAgent())
+            set("User-Agent", USER_AGENT)
             set(USER_ID_HEADER, userId)
         }
         val responseEntity =
@@ -52,7 +52,7 @@ class UzumLkClient(
     ): List<AccountShopItem> {
         val headers = HttpHeaders().apply {
             set("Authorization", "Bearer $userToken")
-            set("User-Agent", RandomUserAgent.getRandomUserAgent())
+            set("User-Agent", USER_AGENT)
             set(USER_ID_HEADER, userId)
         }
         val responseEntity =
@@ -78,7 +78,7 @@ class UzumLkClient(
     ): Boolean {
         val headers = HttpHeaders().apply {
             set("Authorization", "Bearer $userToken")
-            set("User-Agent", RandomUserAgent.getRandomUserAgent())
+            set("User-Agent", USER_AGENT)
             set("Content-Type", MediaType.APPLICATION_JSON_VALUE)
             set(USER_ID_HEADER, userId)
         }
@@ -106,7 +106,7 @@ class UzumLkClient(
     override fun getProductInfo(userId: String, userToken: String, shopId: Long, productId: Long): AccountProductInfo {
         val headers = HttpHeaders().apply {
             set("Authorization", "Bearer $userToken")
-            set("User-Agent", RandomUserAgent.getRandomUserAgent())
+            set("User-Agent", USER_AGENT)
             set(USER_ID_HEADER, userId)
         }
         val responseEntity =
@@ -131,7 +131,7 @@ class UzumLkClient(
     ): AccountProductDescription {
         val headers = HttpHeaders().apply {
             set("Authorization", "Bearer $userToken")
-            set("User-Agent", RandomUserAgent.getRandomUserAgent())
+            set("User-Agent", USER_AGENT)
             set(USER_ID_HEADER, userId)
         }
         val responseEntity =
@@ -163,7 +163,7 @@ class UzumLkClient(
                 ProxyRequestContext(
                     key = "headers",
                     value = mapOf(
-                        "User-Agent" to RandomUserAgent.getRandomUserAgent(),
+                        "User-Agent" to USER_AGENT,
                         "Authorization" to "Basic $basicAuthToken",
                         "Content-Type" to MediaType.APPLICATION_FORM_URLENCODED_VALUE,
                         USER_ID_HEADER to userId
@@ -193,7 +193,7 @@ class UzumLkClient(
         val headers = HttpHeaders().apply {
             contentType = MediaType.APPLICATION_FORM_URLENCODED
             set("Authorization", "Basic $basicAuthToken")
-            set("User-Agent", RandomUserAgent.getRandomUserAgent())
+            set("User-Agent", USER_AGENT)
             set(USER_ID_HEADER, userId)
         }
         val responseEntity =
@@ -214,7 +214,7 @@ class UzumLkClient(
         val headers = HttpHeaders().apply {
             contentType = MediaType.APPLICATION_FORM_URLENCODED
             set("Authorization", "Basic $basicAuthToken")
-            set("User-Agent", RandomUserAgent.getRandomUserAgent())
+            set("User-Agent", USER_AGENT)
             set(USER_ID_HEADER, userId)
         }
         val responseEntity =
@@ -272,5 +272,7 @@ class UzumLkClient(
     companion object {
         const val basicAuthToken = "YjJjLWZyb250OmNsaWVudFNlY3JldA=="
         const val USER_ID_HEADER = "X-USER-ID"
+        const val USER_AGENT =
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/105.0.0.0 Safari/537.36"
     }
 }
