@@ -129,7 +129,7 @@ class UzumAccountShopServiceTest : ContainerConfiguration() {
                 strategyId = null
             )
         )
-        val closeToMinimalStrategy = CloseToMinimalStrategy(10, "close_to_minimal", 100.0, 100.0)
+        val closeToMinimalStrategy = CloseToMinimalStrategy(10, "close_to_minimal", 100.50, 100.50)
         val strategyRequest = AddStrategyRequest(uzumAccountShopItemId, closeToMinimalStrategy)
         uzumAccountShopItemRepository.saveStrategy(strategyRequest)
     }
