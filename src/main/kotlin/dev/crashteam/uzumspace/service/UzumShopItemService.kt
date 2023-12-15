@@ -11,6 +11,7 @@ import dev.crashteam.uzumspace.repository.postgre.entity.UzumShopItemEntity
 import dev.crashteam.uzumspace.service.loader.RemoteImageLoader
 import mu.KotlinLogging
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Propagation
 import org.springframework.transaction.annotation.Transactional
 import java.io.ByteArrayInputStream
 import java.math.BigDecimal
@@ -31,7 +32,7 @@ class UzumShopItemService(
 
     private val pHash = PerceptiveHash(64)
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     fun addShopItemFromUzumData(productData: ProductData) {
         val kazanExpressShopItemEntities = productData.skuList!!.mapNotNull { productSplit ->
             val photo: ProductPhoto = productSplit.characteristics.firstNotNullOfOrNull {
