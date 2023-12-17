@@ -132,9 +132,7 @@ class UzumAccountShopItemPoolRepository(
             i.MAXIMUM_THRESHOLD,
             i.SKU_TITLE,
             i.BARCODE,
-            p.LAST_CHECK,
-            i.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY_ID
-        )
+            p.LAST_CHECK)
             .from(i)
             .join(p).on(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(i.ID))
             .join(s).on(i.UZUM_ACCOUNT_SHOP_ID.eq(s.ID))
@@ -158,8 +156,7 @@ class UzumAccountShopItemPoolRepository(
                     maximumThreshold = record.getValue(i.MAXIMUM_THRESHOLD),
                     skuTitle = record.getValue(i.SKU_TITLE),
                     barcode = record.getValue(i.BARCODE),
-                    lastCheck = record.getValue(p.LAST_CHECK),
-                    strategyId = record.getValue(i.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY_ID)
+                    lastCheck = record.getValue(p.LAST_CHECK)
                 )
             }
     }

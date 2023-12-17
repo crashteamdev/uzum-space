@@ -1,4 +1,5 @@
-package dev.crashteam.uzumspace.repository.postgre
+package dev.crashteam.repricer.repository.postgre
+
 
 import dev.crashteam.openapi.space.model.CloseToMinimalStrategy
 import dev.crashteam.openapi.space.model.Strategy
@@ -9,18 +10,22 @@ import org.jooq.DSLContext
 
 class CloseToMinimalStrategyOptionRepository(private val dsl: DSLContext) :
     StrategyOptionRepository {
-    override fun <T: Strategy> save(t: T): Long {
+    override fun <T: Strategy> save(id: Long, t: T): Long {
         val strategy = t as CloseToMinimalStrategy
         val strategyOption = StrategyOption.STRATEGY_OPTION
         return dsl.insertInto(
             strategyOption,
             strategyOption.MAXIMUM_THRESHOLD,
             strategyOption.MINIMUM_THRESHOLD,
-            strategyOption.STEP
+            strategyOption.STEP,
+            strategyOption.DISCOUNT,
+            strategyOption.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY_ID
         ).values(
             strategy.maximumThreshold.toBigDecimal().movePointRight(2).toLong(),
             strategy.minimumThreshold.toBigDecimal().movePointRight(2).toLong(),
-            strategy.step
+            strategy.step,
+            strategy.discount?.intValueExact(),
+            id
         ).returningResult(strategyOption.ID)
             .fetchOne()!!.getValue(strategyOption.ID)
     }
@@ -32,6 +37,7 @@ class CloseToMinimalStrategyOptionRepository(private val dsl: DSLContext) :
             .set(strategyOption.MAXIMUM_THRESHOLD, strategy.minimumThreshold.toBigDecimal().movePointRight(2).toLong())
             .set(strategyOption.MINIMUM_THRESHOLD, strategy.minimumThreshold.toBigDecimal().movePointRight(2).toLong())
             .set(strategyOption.STEP, strategy.step)
+            .set(strategyOption.DISCOUNT, strategy.discount?.intValueExact())
             .where(strategyOption.ID.eq(id))
             .execute()
     }

@@ -614,32 +614,4 @@ class AccountsController(
             log.warn(it) { "Exception during reinitialize ke account" }
         }
     }
-
-    override fun patchUzumAccountShopitem(
-        xRequestID: UUID,
-        id: UUID,
-        shopItemId: UUID,
-        patchUzumAccountShopItem: Mono<PatchUzumAccountShopItem>,
-        exchange: ServerWebExchange
-    ): Mono<ResponseEntity<UzumAccountShopItem>> {
-        return exchange.getPrincipal<Principal>().flatMap { principal ->
-            patchUzumAccountShopItem.flatMap { request ->
-                val changeCount = uzumAccountShopService.changeShopItemPriceOptions(
-                    id,
-                    shopItemId,
-                    request.step,
-                    request.minimumThreshold,
-                    request.maximumThreshold,
-                    request.discount
-                )
-                if (changeCount <= 0) {
-                    ResponseEntity.notFound().build<UzumAccountShopItem>().toMono()
-                } else {
-                    val uzumAccountShopItem = uzumAccountShopService.getUzumAccountShopItem(principal.name, id, shopItemId)
-                    val shopItem = conversionService.convert(uzumAccountShopItem, UzumAccountShopItem::class.java)
-                    ResponseEntity.ok(shopItem).toMono()
-                }
-            }
-        }
-    }
 }

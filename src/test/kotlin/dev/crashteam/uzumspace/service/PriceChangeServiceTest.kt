@@ -45,6 +45,9 @@ class PriceChangeServiceTest : ContainerConfiguration() {
     lateinit var uzumShopItemRepository: UzumShopItemRepository
 
     @Autowired
+    lateinit var strategyRepository: UzumAccountShopItemStrategyRepository
+
+    @Autowired
     lateinit var uzumAccountShopItemCompetitorRepository: UzumAccountShopItemCompetitorRepository
 
     @Autowired
@@ -105,8 +108,7 @@ class PriceChangeServiceTest : ContainerConfiguration() {
                 skuTitle = "testSkuTitle",
                 minimumThreshold = 1000,
                 maximumThreshold = 6000,
-                step = 10,
-                strategyId = null
+                step = 10
             )
         )
     }
@@ -143,7 +145,7 @@ class PriceChangeServiceTest : ContainerConfiguration() {
         equalPriceStrategy.strategyType = "equal_price"
 
         val strategyRequest = AddStrategyRequest(uzumAccountShopItemId, equalPriceStrategy)
-        uzumAccountShopItemRepository.saveStrategy(strategyRequest)
+        strategyRepository.save(strategyRequest)
 
         whenever(uzumSecureService.getProductDescription(any(), any(), any(), any() )).then {
             AccountProductDescription(
@@ -217,6 +219,14 @@ class PriceChangeServiceTest : ContainerConfiguration() {
             )
         }
         whenever(uzumSecureService.changeAccountShopItemPrice(any(), any(), any(), any())).then { true }
+
+        val equalPriceStrategy = EqualPriceStrategy()
+        equalPriceStrategy.maximumThreshold = 40.0
+        equalPriceStrategy.minimumThreshold = 10.0
+        equalPriceStrategy.strategyType = "equal_price"
+
+        val strategyRequest = AddStrategyRequest(uzumAccountShopItemId, equalPriceStrategy)
+        strategyRepository.save(strategyRequest)
 
         priceChangeService.recalculateUserShopItemPrice(userId, uzumAccountId)
         val paginateEntities =

@@ -40,14 +40,20 @@ class PriceChangeService(
         log.debug { "Found ${poolItem.size} pool items. userId=$userId;uzumAccountId=$uzumAccountId" }
         for (poolFilledEntity in poolItem) {
             try {
-                log.debug { "Begin calculate item price. uzumAccountShopItemId=${poolFilledEntity.uzumAccountShopItemId};" +
-                        ";productId=${poolFilledEntity.productId};skuId=${poolFilledEntity.skuId}" }
+                log.debug {
+                    "Begin calculate item price. uzumAccountShopItemId=${poolFilledEntity.uzumAccountShopItemId};" +
+                            ";productId=${poolFilledEntity.productId};skuId=${poolFilledEntity.skuId}"
+                }
                 val calculationResult = calculationResult(poolFilledEntity)
-                log.debug { "Calculation result = $calculationResult. uzumAccountShopItemId=${poolFilledEntity.uzumAccountShopItemId};" +
-                        ";productId=${poolFilledEntity.productId};skuId=${poolFilledEntity.skuId}" }
+                log.debug {
+                    "Calculation result = $calculationResult. uzumAccountShopItemId=${poolFilledEntity.uzumAccountShopItemId};" +
+                            ";productId=${poolFilledEntity.productId};skuId=${poolFilledEntity.skuId}"
+                }
                 if (calculationResult == null) {
-                    log.info { "No need to change item price. uzumAccountShopItemId=${poolFilledEntity.uzumAccountShopItemId};" +
-                            "productId=${poolFilledEntity.productId};skuId=${poolFilledEntity.skuId}" }
+                    log.info {
+                        "No need to change item price. uzumAccountShopItemId=${poolFilledEntity.uzumAccountShopItemId};" +
+                                "productId=${poolFilledEntity.productId};skuId=${poolFilledEntity.skuId}"
+                    }
                     continue
                 }
                 val accountProductDescription = retryTemplate.execute<AccountProductDescription, Exception> {
@@ -58,11 +64,17 @@ class PriceChangeService(
                         productId = poolFilledEntity.productId
                     )
                 }
-                val newSkuList = buildNewSkuList(userId, uzumAccountId, poolFilledEntity,
-                    calculationResult, poolFilledEntity.minimumThreshold)
-                log.debug { "Trying to change account shop item price. " +
-                        "uzumAccountShopItemId=${poolFilledEntity.uzumAccountShopItemId};" +
-                        ";productId=${poolFilledEntity.productId};skuId=${poolFilledEntity.skuId}" }
+
+                val strategy = strategyService.findStrategy(poolFilledEntity.uzumAccountShopItemId)
+                val newSkuList = buildNewSkuList(
+                    userId, uzumAccountId, poolFilledEntity,
+                    calculationResult, strategy?.minimumThreshold, strategy?.discount?.toBigDecimal()
+                )
+                log.debug {
+                    "Trying to change account shop item price. " +
+                            "uzumAccountShopItemId=${poolFilledEntity.uzumAccountShopItemId};" +
+                            ";productId=${poolFilledEntity.productId};skuId=${poolFilledEntity.skuId}"
+                }
                 val changeAccountShopItemPrice = kazanExpressSecureService.changeAccountShopItemPrice(
                     userId = userId,
                     uzumAccountId = uzumAccountId,
@@ -117,8 +129,10 @@ class PriceChangeService(
                     }
                 }
             } catch (e: Exception) {
-                log.warn(e) { "Failed to change item price. uzumAccountShopItemId=${poolFilledEntity.uzumAccountShopItemId}" +
-                        ";productId=${poolFilledEntity.productId};skuId=${poolFilledEntity.skuId}, cause - ${e.cause?.message}" }
+                log.warn(e) {
+                    "Failed to change item price. uzumAccountShopItemId=${poolFilledEntity.uzumAccountShopItemId}" +
+                            ";productId=${poolFilledEntity.productId};skuId=${poolFilledEntity.skuId}, cause - ${e.cause?.message}"
+                }
             }
         }
     }
@@ -128,7 +142,8 @@ class PriceChangeService(
         uzumAccountId: UUID,
         poolFilledEntity: UzumAccountShopItemPoolFilledEntity,
         calculationResult: CalculationResult,
-        minimumThreshold: Long?
+        minimumThreshold: Long?,
+        discount: BigDecimal?
     ): List<SkuPriceChangeSku> {
         val accountProductDescription = retryTemplate.execute<AccountProductDescription, Exception> {
             kazanExpressSecureService.getProductDescription(
@@ -157,7 +172,7 @@ class PriceChangeService(
         val changeSku = SkuPriceChangeSku(
             id = poolFilledEntity.skuId,
             fullPrice = calculationResult.newPriceMinor.movePointLeft(2).toLong(),
-            sellPrice = calculateDiscountPrice(poolFilledEntity.discount, minimumThreshold, calculationResult.newPriceMinor),
+            sellPrice = calculateDiscountPrice(discount, minimumThreshold, calculationResult.newPriceMinor),
             skuTitle = poolFilledEntity.skuTitle,
             barCode = poolFilledEntity.barcode.toString(),
         )
@@ -168,36 +183,23 @@ class PriceChangeService(
     }
 
     private fun calculationResult(poolFilledEntity: UzumAccountShopItemPoolFilledEntity): CalculationResult? {
-        if (poolFilledEntity.strategyId != null) {
-            val strategy = strategyService.findStrategy(poolFilledEntity.strategyId)
-            val calculatorStrategy = calculators[StrategyType.valueOf(strategy!!.strategyType)]
-            return calculatorStrategy!!.calculatePrice(
-                poolFilledEntity.uzumAccountShopItemId,
-                BigDecimal.valueOf(poolFilledEntity.price),
-                CalculatorOptions(
-                    step = strategy.step,
-                    minimumThreshold = strategy.minimumThreshold,
-                    maximumThreshold = strategy.maximumThreshold
-                )
+        val strategy = strategyService.findStrategy(poolFilledEntity.uzumAccountShopItemId)
+        val calculatorStrategy = calculators[StrategyType.valueOf(strategy!!.strategyType)]
+        return calculatorStrategy!!.calculatePrice(
+            poolFilledEntity.uzumAccountShopItemId,
+            BigDecimal.valueOf(poolFilledEntity.price),
+            CalculatorOptions(
+                step = strategy.step,
+                minimumThreshold = strategy.minimumThreshold,
+                maximumThreshold = strategy.maximumThreshold
             )
-        } else {
-            return closeToMinimalCalculatorStrategy.calculatePrice(
-                poolFilledEntity.uzumAccountShopItemId,
-                BigDecimal.valueOf(poolFilledEntity.price),
-                CalculatorOptions(
-                    step = poolFilledEntity.step,
-                    minimumThreshold = poolFilledEntity.minimumThreshold,
-                    maximumThreshold = poolFilledEntity.maximumThreshold
-                )
-            )
-        }
+        )
     }
 
-    private fun calculateDiscountPrice(discount: BigInteger?, minimumThreshold: Long?, newPriceMinor: BigDecimal): Long {
-        return if (discount != null) {
-            val discountedPrice = (newPriceMinor - ((newPriceMinor * discount.toBigDecimal()) / BigDecimal(
-                100
-            ))).movePointLeft(2).toLong()
+    private fun calculateDiscountPrice(discount: BigDecimal?, minimumThreshold: Long?, newPriceMinor: BigDecimal): Long {
+        return if (discount != null && !discount.equals(0)) {
+            val discountedPrice = (newPriceMinor - ((newPriceMinor * discount) / BigDecimal(100)))
+                .movePointLeft(2).toLong()
             if (minimumThreshold != null && discountedPrice < minimumThreshold) {
                 newPriceMinor.movePointLeft(2).toLong()
             } else {

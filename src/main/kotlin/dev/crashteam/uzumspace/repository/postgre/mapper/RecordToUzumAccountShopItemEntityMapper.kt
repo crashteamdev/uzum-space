@@ -30,8 +30,6 @@ class RecordToUzumAccountShopItemEntityMapper : RecordMapper<UzumAccountShopItem
             step = record.getValue(UZUM_ACCOUNT_SHOP_ITEM.STEP),
             lastUpdate = record.getValue(UZUM_ACCOUNT_SHOP_ITEM.LAST_UPDATE),
             discount = record.getValue(UZUM_ACCOUNT_SHOP_ITEM.DISCOUNT),
-            isInPool = record.get(UzumAccountShopItemPool.UZUM_ACCOUNT_SHOP_ITEM_POOL.UZUM_ACCOUNT_SHOP_ITEM_ID) != null,
-            strategyId = record.getValue(UZUM_ACCOUNT_SHOP_ITEM.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY_ID)
-        )
+            isInPool = record.get(UzumAccountShopItemPool.UZUM_ACCOUNT_SHOP_ITEM_POOL.UZUM_ACCOUNT_SHOP_ITEM_ID) != null)
     }
 }
