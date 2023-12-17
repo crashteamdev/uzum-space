@@ -6,26 +6,29 @@ import dev.crashteam.uzumspace.repository.postgre.UzumAccountShopItemRepository
 import dev.crashteam.uzumspace.repository.postgre.UzumAccountShopItemStrategyRepository
 import dev.crashteam.uzumspace.repository.postgre.entity.strategy.UzumAccountShopItemStrategyEntity
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
+import java.util.*
 
 @Service
 class UzumShopItemStrategyService(
-    private val strategyRepository: UzumAccountShopItemStrategyRepository,
-    private val uzumAccountShopItemRepository: UzumAccountShopItemRepository
-) {
+    private val strategyRepository: UzumAccountShopItemStrategyRepository) {
 
+    @Transactional
     fun saveStrategy(addStrategyRequest: AddStrategyRequest): Long {
-        return uzumAccountShopItemRepository.saveStrategy(addStrategyRequest)
+        return strategyRepository.save(addStrategyRequest)
     }
 
-    fun findStrategy(id: Long): UzumAccountShopItemStrategyEntity? {
-        return strategyRepository.findById(id)
+    fun findStrategy(shopItemId: UUID): UzumAccountShopItemStrategyEntity? {
+        return strategyRepository.findById(shopItemId)
     }
 
-    fun updateStrategy(shopItemStrategyId: Long, patchStrategy: PatchStrategy): Int {
-        return strategyRepository.update(shopItemStrategyId, patchStrategy)
+    @Transactional
+    fun updateStrategy(shopItemId: UUID, patchStrategy: PatchStrategy): Long {
+        return strategyRepository.update(shopItemId, patchStrategy)
     }
 
-    fun deleteStrategy(id: Long): Int? {
-        return strategyRepository.deleteById(id)
+    @Transactional
+    fun deleteStrategy(shopItemId: UUID): Int? {
+        return strategyRepository.deleteById(shopItemId)
     }
 }

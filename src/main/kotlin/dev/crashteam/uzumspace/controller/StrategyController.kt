@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ServerWebExchange
+import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toMono
 import java.security.Principal
@@ -22,68 +23,56 @@ class StrategyController(
 ) : StrategiesApi {
 
     override fun addStrategy(
-        xRequestID: UUID?,
-        addStrategyRequest: Mono<AddStrategyRequest>?,
-        exchange: ServerWebExchange?
-    ): Mono<ResponseEntity<UzumAccountShopItemStrategy>>? {
-        return addStrategyRequest?.flatMap {
-            val strategyId = uzumShopItemStrategyService.saveStrategy(it)
-            val strategy = uzumShopItemStrategyService.findStrategy(strategyId)
+        xRequestID: UUID,
+        addStrategyRequest: Mono<AddStrategyRequest>,
+        exchange: ServerWebExchange
+    ): Mono<ResponseEntity<UzumAccountShopItemStrategy>> {
+        return addStrategyRequest.flatMap {
+            uzumShopItemStrategyService.saveStrategy(it)
+            val strategy = uzumShopItemStrategyService.findStrategy(it.uzumAccountShopItemId)
             val itemStrategy = conversionService.convert(strategy, UzumAccountShopItemStrategy::class.java)
             return@flatMap ResponseEntity.status(HttpStatus.CREATED).body(itemStrategy).toMono()
         }
     }
 
     override fun deleteStrategy(
-        xRequestID: UUID?,
-        shopItemStrategyId: Long?,
-        exchange: ServerWebExchange?
-    ): Mono<ResponseEntity<Void>>? {
-        if (shopItemStrategyId != null) {
-            return exchange?.getPrincipal<Principal>()?.flatMap {
-                uzumShopItemStrategyService.deleteStrategy(shopItemStrategyId)
-                return@flatMap ResponseEntity.noContent().build<Void>().toMono()
-            }
+        xRequestID: UUID,
+        shopItemId: UUID,
+        exchange: ServerWebExchange
+    ): Mono<ResponseEntity<Void>> {
+        return exchange.getPrincipal<Principal>().flatMap {
+            uzumShopItemStrategyService.deleteStrategy(shopItemId)
+            return@flatMap ResponseEntity.noContent().build<Void>().toMono()
         }
-        return Mono.just(ResponseEntity.noContent().build())
-
     }
 
     override fun getStrategy(
-        xRequestID: UUID?,
-        shopItemStrategyId: Long?,
-        exchange: ServerWebExchange?
+        xRequestID: UUID,
+        shopItemId: UUID,
+        exchange: ServerWebExchange
     ): Mono<ResponseEntity<UzumAccountShopItemStrategy>> {
-        if (shopItemStrategyId != null) {
-            exchange?.getPrincipal<Principal>()?.flatMap {
-                val strategy = uzumShopItemStrategyService.findStrategy(shopItemStrategyId)
-                val strategyDto = conversionService.convert(strategy, UzumAccountShopItemStrategy::class.java)
-                return@flatMap ResponseEntity.ok().body(strategyDto).toMono()
-            }
+        return exchange.getPrincipal<Principal>().flatMap {
+            val strategy = uzumShopItemStrategyService.findStrategy(shopItemId)
+            val strategyDto = conversionService.convert(strategy, UzumAccountShopItemStrategy::class.java)
+            return@flatMap ResponseEntity.ok().body(strategyDto).toMono()
         }
-        throw IllegalArgumentException("shopItemStrategyId can't be null")
     }
 
     override fun patchStrategy(
-        xRequestID: UUID?,
-        shopItemStrategyId: Long?,
-        patchStrategy: Mono<PatchStrategy>?,
-        exchange: ServerWebExchange?
+        xRequestID: UUID,
+        shopItemId: UUID,
+        patchStrategy: Mono<PatchStrategy>,
+        exchange: ServerWebExchange
     ): Mono<ResponseEntity<UzumAccountShopItemStrategy>> {
-        if (shopItemStrategyId != null) {
-            patchStrategy?.flatMap {
-                uzumShopItemStrategyService.updateStrategy(shopItemStrategyId, it)
-                val strategy = uzumShopItemStrategyService.findStrategy(shopItemStrategyId)
-                val itemStrategy = conversionService.convert(strategy, UzumAccountShopItemStrategy::class.java)
-
-                uzumShopItemStrategyService.deleteStrategy(shopItemStrategyId)
-                return@flatMap ResponseEntity.ok().body(itemStrategy).toMono()
-            }
+        return patchStrategy.flatMap {
+            uzumShopItemStrategyService.updateStrategy(shopItemId, it)
+            val strategy = uzumShopItemStrategyService.findStrategy(shopItemId)
+            val itemStrategy = conversionService.convert(strategy, UzumAccountShopItemStrategy::class.java)
+            return@flatMap ResponseEntity.ok().body(itemStrategy).toMono()
         }
-        return Mono.just(ResponseEntity.badRequest().build())
     }
 
-    override fun getStrategyTypes(exchange: ServerWebExchange?): Mono<ResponseEntity<StrategyType>> {
-        return super.getStrategyTypes(exchange)
+    override fun getStrategyTypes(exchange: ServerWebExchange?): Mono<ResponseEntity<Flux<StrategyType>>> {
+        return Mono.just(ResponseEntity.ok(Flux.fromIterable(StrategyType.values().toList())))
     }
 }

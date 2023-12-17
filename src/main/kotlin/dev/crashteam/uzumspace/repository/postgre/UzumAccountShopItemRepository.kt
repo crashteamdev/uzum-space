@@ -1,17 +1,15 @@
 package dev.crashteam.uzumspace.repository.postgre
 
-import dev.crashteam.openapi.space.model.AddStrategyRequest
 import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItem.UZUM_ACCOUNT_SHOP_ITEM
-import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItemPool.*
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItemPool.UZUM_ACCOUNT_SHOP_ITEM_POOL
 import dev.crashteam.uzumspace.extensions.paginate
-import dev.crashteam.uzumspace.repository.postgre.entity.UzumAccountShopItemEntity
 import dev.crashteam.uzumspace.repository.postgre.entity.PaginateEntity
+import dev.crashteam.uzumspace.repository.postgre.entity.UzumAccountShopItemEntity
 import dev.crashteam.uzumspace.repository.postgre.mapper.RecordToUzumAccountShopItemEntityMapper
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
 import org.springframework.stereotype.Repository
-import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.*
@@ -19,20 +17,7 @@ import java.util.*
 @Repository
 class UzumAccountShopItemRepository(
     private val dsl: DSLContext,
-    private val recordToUzumAccountShopItemEntityMapper: RecordToUzumAccountShopItemEntityMapper,
-    private val strategyRepository: UzumAccountShopItemStrategyRepository
-) {
-
-    @Transactional
-    fun saveStrategy(strategyRequest: AddStrategyRequest): Long {
-        val i = UZUM_ACCOUNT_SHOP_ITEM
-        val strategyId = strategyRepository.save(strategyRequest)
-        dsl.update(i)
-            .set(i.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY_ID, strategyId)
-            .where(i.ID.eq(strategyRequest.uzumAccountShopItemId))
-            .execute()
-        return strategyId
-    }
+    private val recordToUzumAccountShopItemEntityMapper: RecordToUzumAccountShopItemEntityMapper) {
 
     fun save(uzumAccountShopItemEntity: UzumAccountShopItemEntity): UUID? {
         val i = UZUM_ACCOUNT_SHOP_ITEM

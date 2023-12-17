@@ -24,6 +24,4 @@ data class UzumAccountShopItemEntity(
     val step: Int? = null,
     val discount: BigInteger? = null,
     val lastUpdate: LocalDateTime,
-    val isInPool: Boolean? = false,
-    val strategyId: Long?
-)
+    val isInPool: Boolean? = false)

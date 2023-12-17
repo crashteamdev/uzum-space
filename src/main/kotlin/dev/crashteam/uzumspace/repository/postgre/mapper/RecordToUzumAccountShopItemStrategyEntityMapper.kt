@@ -15,7 +15,9 @@ class RecordToUzumAccountShopItemStrategyEntityMapper : RecordMapper<UzumAccount
             record.getValue(STRATEGY_OPTION.ID),
             record.getValue(STRATEGY_OPTION.MINIMUM_THRESHOLD),
             record.getValue(STRATEGY_OPTION.MAXIMUM_THRESHOLD),
-            record.getValue(STRATEGY_OPTION.STEP)
+            record.getValue(STRATEGY_OPTION.STEP),
+            record.getValue(STRATEGY_OPTION.DISCOUNT),
+            record.getValue(UZUM_ACCOUNT_SHOP_ITEM_STRATEGY.UZUM_ACCOUNT_SHOP_ITEM_ID)
         )
     }
 }

@@ -26,6 +26,7 @@
         <testcontainers.version>1.17.3</testcontainers.version>
         <selenium.version>4.4.0</selenium.version>
         <imageio.version>3.9.4</imageio.version>
+        <openapi-uzum-space.version>1.8-b227ddb-server</openapi-uzum-space.version>
     </properties>
     <dependencies>
         <!-- Spring -->
@@ -108,8 +109,8 @@
         </dependency>
         <dependency>
             <groupId>dev.crashteam</groupId>
-            <artifactId>openapi-space</artifactId>
-            <version>1.4-dfa8b0a-server</version>
+            <artifactId>openapi-uzum-space</artifactId>
+            <version>${openapi-uzum-space.version}</version>
         </dependency>
         <dependency>
             <groupId>dev.crashteam</groupId>

@@ -125,20 +125,17 @@ class UzumAccountShopServiceTest : ContainerConfiguration() {
                 skuTitle = "testSkuTitle",
                 minimumThreshold = 1000,
                 maximumThreshold = 2000,
-                step = 10,
-                strategyId = null
+                step = 10
             )
         )
         val closeToMinimalStrategy = CloseToMinimalStrategy(10, "close_to_minimal", 100.50, 100.50)
         val strategyRequest = AddStrategyRequest(uzumAccountShopItemId, closeToMinimalStrategy)
-        uzumAccountShopItemRepository.saveStrategy(strategyRequest)
+        strategyRepository.save(strategyRequest)
     }
 
     @Test
     fun `check if strategy exists`() {
-        val shopItem = uzumAccountShopItemRepository.findShopItem(uzumAccountId, uzumAccountShopItemId)
-        assertNotEquals(null, shopItem?.strategyId)
-        val strategyEntity = shopItem!!.strategyId?.let { strategyRepository.findById(it) }
+        val strategyEntity = strategyRepository.findById(uzumAccountShopItemId)
         assertEquals(strategyEntity?.strategyType, "close_to_minimal")
     }
 

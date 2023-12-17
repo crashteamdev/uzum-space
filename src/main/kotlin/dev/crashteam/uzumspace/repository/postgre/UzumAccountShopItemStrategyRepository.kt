@@ -3,14 +3,15 @@ package dev.crashteam.uzumspace.repository.postgre
 import dev.crashteam.openapi.space.model.AddStrategyRequest
 import dev.crashteam.openapi.space.model.PatchStrategy
 import dev.crashteam.openapi.space.model.Strategy
+import dev.crashteam.repricer.repository.postgre.StrategyOptionRepository
 import dev.crashteam.uzumspace.db.model.enums.StrategyType
-import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItemStrategy.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY
 import dev.crashteam.uzumspace.db.model.tables.StrategyOption.STRATEGY_OPTION
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItemStrategy.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY
 import dev.crashteam.uzumspace.repository.postgre.entity.strategy.UzumAccountShopItemStrategyEntity
 import dev.crashteam.uzumspace.repository.postgre.mapper.RecordToUzumAccountShopItemStrategyEntityMapper
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
-import org.springframework.transaction.annotation.Transactional
+import java.util.*
 
 @Repository
 class UzumAccountShopItemStrategyRepository(
@@ -19,59 +20,62 @@ class UzumAccountShopItemStrategyRepository(
     private val strategyMapper: RecordToUzumAccountShopItemStrategyEntityMapper
 ) {
 
-    @Transactional
     fun save(strategyRequest: AddStrategyRequest): Long {
         val itemStrategy = UZUM_ACCOUNT_SHOP_ITEM_STRATEGY
         val strategyType = StrategyType.valueOf(strategyRequest.strategy.strategyType)
-
-        val optionId = saveOption(strategyRequest.strategy)
-        return dsl.insertInto(
+        val strategyId = dsl.insertInto(
             itemStrategy,
             itemStrategy.STRATEGY_TYPE,
-            itemStrategy.STRATEGY_OPTION_ID
+            itemStrategy.UZUM_ACCOUNT_SHOP_ITEM_ID
         ).values(
             strategyType,
-            optionId
+            strategyRequest.uzumAccountShopItemId
         ).returningResult(itemStrategy.ID)
             .fetchOne()!!
             .getValue(itemStrategy.ID)
+        saveOption(strategyId, strategyRequest.strategy)
+        return strategyId
     }
 
-    @Transactional
-    fun update(shopItemStrategyId: Long, patchStrategy: PatchStrategy): Int {
+    fun update(id: UUID, patchStrategy: PatchStrategy): Long {
         val strategyType = StrategyType.valueOf(patchStrategy.strategy.strategyType)
         val itemStrategy = UZUM_ACCOUNT_SHOP_ITEM_STRATEGY
-        val strategyOptionId = dsl.update(itemStrategy)
+        val o = STRATEGY_OPTION
+
+        dsl.update(itemStrategy)
             .set(itemStrategy.STRATEGY_TYPE, strategyType)
-            .where(itemStrategy.ID.eq(shopItemStrategyId))
-            .returningResult(itemStrategy.STRATEGY_OPTION_ID)
-            .fetchOne()!!.getValue(itemStrategy.STRATEGY_OPTION_ID)
-        return updateOption(strategyOptionId, patchStrategy.strategy)
+            .where(itemStrategy.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(id))
+            .returningResult(itemStrategy.ID)
+            .execute()
+
+        val strategyOptionId = dsl.select()
+            .from(itemStrategy.innerJoin(o).on(itemStrategy.ID.eq(o.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY_ID)))
+            .fetchOne()!!.getValue(o.ID)
+        updateOption(strategyOptionId, patchStrategy.strategy)
+        return strategyOptionId
     }
 
-    @Transactional
-    fun saveOption(strategy: Strategy): Long {
+    fun saveOption(id: Long, strategy: Strategy): Long {
         val strategyEntityType = StrategyType.valueOf(strategy.strategyType)
-        return strategiesMap[strategyEntityType]!!.save(strategy)
+        return strategiesMap[strategyEntityType]!!.save(id, strategy)
     }
 
-    @Transactional
-    fun updateOption(shopItemStrategyId: Long, strategy: Strategy): Int {
+    fun updateOption(strategyOptionId: Long, strategy: Strategy): Int {
         val strategyEntityType = StrategyType.valueOf(strategy.strategyType)
-        return strategiesMap[strategyEntityType]!!.update(shopItemStrategyId, strategy)
+        return strategiesMap[strategyEntityType]!!.update(strategyOptionId, strategy)
     }
 
-    fun findById(id: Long): UzumAccountShopItemStrategyEntity? {
+    fun findById(keAccountShopItemId: UUID): UzumAccountShopItemStrategyEntity? {
         val i = UZUM_ACCOUNT_SHOP_ITEM_STRATEGY
         val o = STRATEGY_OPTION
         return dsl.select()
-            .from(i.leftJoin(o).on(i.STRATEGY_OPTION_ID.eq(o.ID)))
-            .where(i.ID.eq(id))
+            .from(i.leftJoin(o).on(i.ID.eq(o.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY_ID)))
+            .where(i.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(keAccountShopItemId))
             .fetchOne()?.map { strategyMapper.convert(it) }
     }
 
-    fun deleteById(id: Long): Int {
+    fun deleteById(keAccountShopItemId: UUID): Int {
         val i = UZUM_ACCOUNT_SHOP_ITEM_STRATEGY
-        return dsl.deleteFrom(i).where(i.ID.eq(id)).execute();
+        return dsl.deleteFrom(i).where(i.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(keAccountShopItemId)).execute();
     }
 }
