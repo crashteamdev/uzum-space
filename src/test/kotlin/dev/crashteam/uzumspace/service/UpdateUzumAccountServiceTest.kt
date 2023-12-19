@@ -30,6 +30,9 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
     lateinit var updateUzumAccountService: UpdateUzumAccountService
 
     @Autowired
+    lateinit var uzumAccountService: UzumAccountService
+
+    @Autowired
     lateinit var accountRepository: AccountRepository
 
     @Autowired
@@ -158,6 +161,12 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
     @Test
     fun `update shop items`() {
         // Given
+        val firstAccountShop = AccountShop(
+            id = 1,
+            shopTitle = "test",
+            urlTitle = "testUrl",
+            skuTitle = "testSkuTitle"
+        )
         val uzumAccountShopEntity = UzumAccountShopEntity(
             id = UUID.randomUUID(),
             uzumAccountId = uzumAccountId,
@@ -202,6 +211,12 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
         whenever(
             uzumSecureService.getProductInfo(any(), any(), any(), any())
         ).then { accountProductInfo }
+        whenever(uzumSecureService.getAccountShops(any(), any())).then {
+            listOf(firstAccountShop)
+        }
+        whenever(
+            uzumSecureService.getAccountShopItems(any(), any(), any(), any())
+        ).then { listOf(uzumShopItem) }.then { emptyList<AccountShopItem>() }
         whenever(
             uzumWebClient.getProductInfo(any())
         ).then {
@@ -209,7 +224,7 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
         }
 
         // When
-        updateUzumAccountService.updateShopItems(userId, uzumAccountId)
+        uzumAccountService.syncAccount(userId, uzumAccountId)
         val shopItems = uzumAccountShopItemRepository.findShopItems(uzumAccountId, uzumAccountShopEntity.id!!)
 
         // Then
