@@ -28,7 +28,6 @@ class PriceChangeService(
     private val kazanExpressSecureService: UzumSecureService,
     private val uzumShopItemPriceHistoryRepository: UzumShopItemPriceHistoryRepository,
     private val uzumAccountShopItemRepository: UzumAccountShopItemRepository,
-    private val closeToMinimalCalculatorStrategy: CloseToMinimalPriceChangeCalculatorStrategy,
     private val retryTemplate: RetryTemplate,
     private val strategyService: UzumShopItemStrategyService,
     private val calculators: Map<StrategyType, PriceChangeCalculatorStrategy>
@@ -183,8 +182,8 @@ class PriceChangeService(
     }
 
     private fun calculationResult(poolFilledEntity: UzumAccountShopItemPoolFilledEntity): CalculationResult? {
-        val strategy = strategyService.findStrategy(poolFilledEntity.uzumAccountShopItemId)
-        val calculatorStrategy = calculators[StrategyType.valueOf(strategy!!.strategyType)]
+        val strategy = strategyService.findStrategy(poolFilledEntity.uzumAccountShopItemId) ?: return null
+        val calculatorStrategy = calculators[StrategyType.valueOf(strategy.strategyType)]
         return calculatorStrategy!!.calculatePrice(
             poolFilledEntity.uzumAccountShopItemId,
             BigDecimal.valueOf(poolFilledEntity.price),

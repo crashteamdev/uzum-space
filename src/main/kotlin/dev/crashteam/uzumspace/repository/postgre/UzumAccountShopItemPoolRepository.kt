@@ -1,5 +1,6 @@
 package dev.crashteam.uzumspace.repository.postgre
 
+import dev.crashteam.uzumspace.db.model.Tables.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY
 import dev.crashteam.uzumspace.db.model.tables.Account.ACCOUNT
 import dev.crashteam.uzumspace.db.model.tables.UzumAccount.UZUM_ACCOUNT
 import dev.crashteam.uzumspace.db.model.tables.UzumAccountShop.UZUM_ACCOUNT_SHOP
@@ -116,6 +117,7 @@ class UzumAccountShopItemPoolRepository(
         val s = UZUM_ACCOUNT_SHOP
         val i = UZUM_ACCOUNT_SHOP_ITEM
         val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
+        val st = UZUM_ACCOUNT_SHOP_ITEM_STRATEGY
         return dsl.select(
             p.UZUM_ACCOUNT_SHOP_ITEM_ID,
             k.ID.`as`("ke_account_id"),
@@ -134,6 +136,7 @@ class UzumAccountShopItemPoolRepository(
             i.BARCODE,
             p.LAST_CHECK)
             .from(i)
+            .innerJoin(st).on(st.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(i.ID))
             .join(p).on(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(i.ID))
             .join(s).on(i.UZUM_ACCOUNT_SHOP_ID.eq(s.ID))
             .join(k).on(s.UZUM_ACCOUNT_ID.eq(k.ID))
