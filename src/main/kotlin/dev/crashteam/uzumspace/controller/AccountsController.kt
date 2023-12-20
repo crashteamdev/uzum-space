@@ -7,10 +7,13 @@ import dev.crashteam.uzumspace.db.model.enums.MonitorState
 import dev.crashteam.uzumspace.db.model.tables.UzumAccountShop.*
 import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItem.UZUM_ACCOUNT_SHOP_ITEM
 import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItemCompetitor.UZUM_ACCOUNT_SHOP_ITEM_COMPETITOR
+import dev.crashteam.uzumspace.filter.KeAccountShopItemFilterRecordMapper
+import dev.crashteam.uzumspace.filter.QueryFilterParser
 import dev.crashteam.uzumspace.repository.postgre.UzumShopItemPriceHistoryRepository
 import dev.crashteam.uzumspace.service.*
 import dev.crashteam.uzumspace.service.error.AccountItemCompetitorLimitExceededException
 import dev.crashteam.uzumspace.service.error.AccountItemPoolLimitExceededException
+import dev.crashteam.uzumspace.service.error.CompetitorItemAlreadyExistsException
 import dev.crashteam.uzumspace.service.error.UserNotFoundException
 import dev.crashteam.uzumspace.service.resolver.UrlToProductResolver
 import mu.KotlinLogging
@@ -39,7 +42,8 @@ class AccountsController(
     private val uzumShopItemService: UzumShopItemService,
     private val uzumShopItemPriceHistoryRepository: UzumShopItemPriceHistoryRepository,
     private val conversionService: ConversionService,
-    private val urlToProductResolver: UrlToProductResolver
+    private val urlToProductResolver: UrlToProductResolver,
+    private val queryFilterParser: QueryFilterParser,
 ) : AccountsApi {
 
     override fun addUzumAccount(
@@ -98,6 +102,8 @@ class AccountsController(
                     )
                 } catch (e: AccountItemCompetitorLimitExceededException) {
                     return@flatMap ResponseEntity.status(HttpStatus.FORBIDDEN).build<Void>().toMono()
+                } catch (e: CompetitorItemAlreadyExistsException) {
+                    return@flatMap ResponseEntity.status(HttpStatus.CONFLICT).build<Void>().toMono()
                 }
                 ResponseEntity.status(HttpStatus.OK).build<Void>().toMono()
             }
@@ -242,33 +248,15 @@ class AccountsController(
         return exchange.getPrincipal<Principal>().flatMap {
             val limit = limit ?: 10
             val offset = offset ?: 0
-            val mapFields = mapOf(
-                "productId" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.PRODUCT_ID),
-                "skuId" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.SKU_ID),
-                "skuTitle" to StringTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.SKU_TITLE),
-                "name" to StringTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.NAME),
-                "photoKey" to StringTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.PHOTO_KEY),
-                "purchasePrice" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.PURCHASE_PRICE),
-                "price" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.PRICE),
-                "barCode" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.BARCODE),
-                "availableAmount" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.AVAILABLE_AMOUNT),
-                "minimumThreshold" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.MINIMUM_THRESHOLD),
-                "maximumThreshold" to LongTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.MAXIMUM_THRESHOLD),
-                "step" to IntegerTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.STEP),
-                "discount" to BigIntegerTableFieldMapper(UZUM_ACCOUNT_SHOP_ITEM.DISCOUNT)
-            )
-            val filterCondition = filter?.let {
-                FilterOperation.parse(filter, mapFields)
-            }
-            val sortFields = if (sort != null) {
-                SortOperation.parse(sort, mapFields)
+            val parsedQuery = if (filter != null || sort != null) {
+                queryFilterParser.parseFilter(filter, sort, KeAccountShopItemFilterRecordMapper())
             } else null
             val shopItemCompetitors = uzumAccountShopService.getUzumAccountShopItems(
                 it.name,
                 id,
                 shopId,
-                filterCondition,
-                sortFields,
+                parsedQuery?.filterCondition,
+                parsedQuery?.sortFields,
                 limit.toLong(),
                 offset.toLong()
             )

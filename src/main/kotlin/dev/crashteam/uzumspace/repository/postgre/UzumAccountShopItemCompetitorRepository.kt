@@ -97,6 +97,21 @@ class UzumAccountShopItemCompetitorRepository(
             .fetchOne(0, Int::class.java) ?: 0
     }
 
+    fun findShopItemCompetitorForUpdate(
+        uzumAccountShopItemId: UUID,
+        productId: Long,
+        skuId: Long,
+    ): UzumAccountShopItemCompetitorEntity? {
+        val c = UZUM_ACCOUNT_SHOP_ITEM_COMPETITOR
+        return dsl.selectFrom(c)
+            .where(
+                c.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(uzumAccountShopItemId)
+                    .and(c.PRODUCT_ID.eq(productId).and(c.SKU_ID.eq(skuId)))
+            )
+            .fetchOne()
+            ?.map { recordToUzumAccountShopItemCompetitorMapper.convert(it) }
+    }
+
     fun findShopItemCompetitorsWithData(
         uzumAccountShopItemId: UUID,
     ): List<UzumAccountShopItemCompetitorEntityJoinUzumShopItemEntity> {

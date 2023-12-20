@@ -1,6 +1,7 @@
 package dev.crashteam.uzumspace.service
 
 import dev.crashteam.uzumspace.ContainerConfiguration
+import dev.crashteam.uzumspace.client.uzum.UzumLkClient
 import dev.crashteam.uzumspace.client.uzum.UzumWebClient
 import dev.crashteam.uzumspace.client.uzum.model.lk.*
 import dev.crashteam.uzumspace.db.model.enums.MonitorState
@@ -17,17 +18,23 @@ import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.mock.mockito.MockBean
+import org.springframework.http.ResponseEntity
 import org.testcontainers.junit.jupiter.Testcontainers
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.*
 
 @Testcontainers
+@SpringBootTest
 class UpdateUzumAccountServiceTest : ContainerConfiguration() {
 
     @Autowired
     lateinit var updateUzumAccountService: UpdateUzumAccountService
+
+    @Autowired
+    lateinit var uzumAccountService: UzumAccountService
 
     @Autowired
     lateinit var accountRepository: AccountRepository
@@ -49,6 +56,9 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
 
     @MockBean
     lateinit var uzumWebClient: UzumWebClient
+
+    @MockBean
+    lateinit var uzumLkClient: UzumLkClient
 
     val userId = UUID.randomUUID().toString()
 
@@ -158,6 +168,12 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
     @Test
     fun `update shop items`() {
         // Given
+        val firstAccountShop = AccountShop(
+            id = 1,
+            shopTitle = "test",
+            urlTitle = "testUrl",
+            skuTitle = "testSkuTitle"
+        )
         val uzumAccountShopEntity = UzumAccountShopEntity(
             id = UUID.randomUUID(),
             uzumAccountId = uzumAccountId,
@@ -191,6 +207,15 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
             ),
             image = "https://ke-images.servicecdn.ru/cbtma55i6omb975ssukg/t_product_240_low.jpg"
         )
+        whenever(uzumSecureService.authUser(any(), any())).thenReturn("test")
+        whenever(uzumLkClient.checkToken(any(), any())).thenReturn(
+            ResponseEntity.ok(
+                CheckTokenResponse(14L, true, "test", "test", 123L)
+            )
+        )
+        whenever(uzumSecureService.getAccountShops(any(), any())).then {
+            listOf(firstAccountShop)
+        }
         whenever(
             uzumSecureService.getAccountShopItems(any(), any(), any(), any())
         ).then { listOf(uzumShopItem) }.then { emptyList<AccountShopItem>() }
@@ -202,6 +227,12 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
         whenever(
             uzumSecureService.getProductInfo(any(), any(), any(), any())
         ).then { accountProductInfo }
+        whenever(uzumSecureService.getAccountShops(any(), any())).then {
+            listOf(firstAccountShop)
+        }
+        whenever(
+            uzumSecureService.getAccountShopItems(any(), any(), any(), any())
+        ).then { listOf(uzumShopItem) }.then { emptyList<AccountShopItem>() }
         whenever(
             uzumWebClient.getProductInfo(any())
         ).then {
@@ -209,7 +240,7 @@ class UpdateUzumAccountServiceTest : ContainerConfiguration() {
         }
 
         // When
-        updateUzumAccountService.updateShopItems(userId, uzumAccountId)
+        uzumAccountService.syncAccount(userId, uzumAccountId)
         val shopItems = uzumAccountShopItemRepository.findShopItems(uzumAccountId, uzumAccountShopEntity.id!!)
 
         // Then

@@ -1,11 +1,13 @@
 package dev.crashteam.uzumspace.service
 
+import dev.crashteam.uzumspace.client.uzum.UzumLkClient
 import dev.crashteam.uzumspace.db.model.enums.InitializeState
 import dev.crashteam.uzumspace.db.model.enums.MonitorState
 import dev.crashteam.uzumspace.db.model.enums.UpdateState
 import dev.crashteam.uzumspace.job.UzumAccountInitializeJob
 import dev.crashteam.uzumspace.repository.postgre.AccountRepository
 import dev.crashteam.uzumspace.repository.postgre.UzumAccountRepository
+import dev.crashteam.uzumspace.repository.postgre.UzumAccountShopRepository
 import dev.crashteam.uzumspace.repository.postgre.entity.UzumAccountEntity
 import dev.crashteam.uzumspace.restriction.AccountSubscriptionRestrictionValidator
 import dev.crashteam.uzumspace.service.encryption.PasswordEncryptor
@@ -19,6 +21,7 @@ import org.quartz.SimpleTrigger
 import org.springframework.scheduling.quartz.SimpleTriggerFactoryBean
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
+import java.time.LocalDateTime
 import java.util.*
 
 private val log = KotlinLogging.logger {}
@@ -30,6 +33,10 @@ class UzumAccountService(
     private val passwordEncryptor: PasswordEncryptor,
     private val accountRestrictionValidator: AccountSubscriptionRestrictionValidator,
     private val scheduler: Scheduler,
+    private val uzumSecureService: UzumSecureService,
+    private val uzumLkClient: UzumLkClient,
+    private val updateUzumAccountService: UpdateUzumAccountService,
+    private val uzumAccountShopRepository: UzumAccountShopRepository,
 ) {
 
     fun addUzumAccount(userId: String, login: String, password: String): UzumAccountEntity {
@@ -51,6 +58,35 @@ class UzumAccountService(
         uzumAccountRepository.save(kazanExpressAccountEntity)
 
         return kazanExpressAccountEntity
+    }
+
+    @Transactional
+    fun syncAccount(userId: String, keAccountId: UUID) {
+        val accessToken = uzumSecureService.authUser(userId, keAccountId)
+        val checkToken = uzumLkClient.checkToken(userId, accessToken).body!!
+        val kazanExpressAccount = uzumAccountRepository.getUzumAccount(userId, keAccountId)!!.copy(
+            externalAccountId = checkToken.accountId,
+            name = checkToken.firstName,
+            email = checkToken.email
+        )
+        uzumAccountRepository.save(kazanExpressAccount)
+        log.info { "Update shops. userId=$userId;keAccountId=$keAccountId" }
+        updateUzumAccountService.updateShops(userId, keAccountId)
+        val keAccountShops = uzumAccountShopRepository.getUzumAccountShops(userId, keAccountId)
+        keAccountShops.forEach { uzumAccountShopEntity ->
+            log.info {
+                "Update shop items." +
+                        " userId=$userId;keAccountId=$keAccountId;shopId=${uzumAccountShopEntity.externalShopId}"
+            }
+            updateUzumAccountService.updateShopItems(userId, keAccountId, uzumAccountShopEntity)
+        }
+        log.info { "Change update state to finished. userId=$userId;keAccountId=$keAccountId" }
+        uzumAccountRepository.changeUpdateState(
+            userId,
+            keAccountId,
+            UpdateState.finished,
+            LocalDateTime.now()
+        )
     }
 
     fun removeUzumAccount(userId: String, uzumAccountId: UUID): Int {
