@@ -105,7 +105,11 @@ class UzumAccountShopService(
             throw AccountItemCompetitorLimitExceededException("Pool limit exceeded for user. userId=$userId")
 
         val shopItemCompetitor =
-            uzumAccountShopItemCompetitorRepository.findShopItemCompetitorForUpdate(uzumAccountShopItemId, productId, skuId)
+            uzumAccountShopItemCompetitorRepository.findShopItemCompetitorForUpdate(
+                uzumAccountShopItemId,
+                productId,
+                skuId
+            )
         if (shopItemCompetitor != null) {
             throw CompetitorItemAlreadyExistsException()
         }

@@ -101,7 +101,7 @@ class UzumAccountShopItemCompetitorRepository(
         uzumAccountShopItemId: UUID,
         productId: Long,
         skuId: Long,
-    ): UzumAccountShopItemCompetitorEntityJoinUzumShopItemEntity? {
+    ): UzumAccountShopItemCompetitorEntity? {
         val c = UZUM_ACCOUNT_SHOP_ITEM_COMPETITOR
         return dsl.selectFrom(c)
             .where(
@@ -109,7 +109,7 @@ class UzumAccountShopItemCompetitorRepository(
                     .and(c.PRODUCT_ID.eq(productId).and(c.SKU_ID.eq(skuId)))
             )
             .fetchOne()
-            ?.map { recordToUzumAccountShopItemCompetitorEntityJoinUzumShopItemEntityMapper.convert(it) }
+            ?.map { recordToUzumAccountShopItemCompetitorMapper.convert(it) }
     }
 
     fun findShopItemCompetitorsWithData(
