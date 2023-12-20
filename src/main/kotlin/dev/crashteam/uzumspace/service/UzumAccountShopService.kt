@@ -6,6 +6,7 @@ import dev.crashteam.uzumspace.repository.postgre.entity.*
 import dev.crashteam.uzumspace.restriction.AccountSubscriptionRestrictionValidator
 import dev.crashteam.uzumspace.service.error.AccountItemCompetitorLimitExceededException
 import dev.crashteam.uzumspace.service.error.AccountItemPoolLimitExceededException
+import dev.crashteam.uzumspace.service.error.CompetitorItemAlreadyExistsException
 import mu.KotlinLogging
 import org.jooq.Condition
 import org.jooq.Field
@@ -102,6 +103,12 @@ class UzumAccountShopService(
             accountSubscriptionRestrictionValidator.validateItemCompetitorCount(userId, uzumAccountShopItemId)
         if (!isValidCompetitorItemCount)
             throw AccountItemCompetitorLimitExceededException("Pool limit exceeded for user. userId=$userId")
+
+        val shopItemCompetitor =
+            uzumAccountShopItemCompetitorRepository.findShopItemCompetitorForUpdate(uzumAccountShopItemId, productId, skuId)
+        if (shopItemCompetitor != null) {
+            throw CompetitorItemAlreadyExistsException()
+        }
 
         val kazanExpressAccountShopItemEntity =
             uzumAccountShopItemRepository.findShopItem(uzumAccountId, uzumAccountShopId, uzumAccountShopItemId)

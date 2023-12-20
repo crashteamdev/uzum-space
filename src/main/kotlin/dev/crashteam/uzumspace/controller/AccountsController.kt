@@ -13,6 +13,7 @@ import dev.crashteam.uzumspace.repository.postgre.UzumShopItemPriceHistoryReposi
 import dev.crashteam.uzumspace.service.*
 import dev.crashteam.uzumspace.service.error.AccountItemCompetitorLimitExceededException
 import dev.crashteam.uzumspace.service.error.AccountItemPoolLimitExceededException
+import dev.crashteam.uzumspace.service.error.CompetitorItemAlreadyExistsException
 import dev.crashteam.uzumspace.service.error.UserNotFoundException
 import dev.crashteam.uzumspace.service.resolver.UrlToProductResolver
 import mu.KotlinLogging
@@ -101,6 +102,8 @@ class AccountsController(
                     )
                 } catch (e: AccountItemCompetitorLimitExceededException) {
                     return@flatMap ResponseEntity.status(HttpStatus.FORBIDDEN).build<Void>().toMono()
+                } catch (e: CompetitorItemAlreadyExistsException) {
+                    return@flatMap ResponseEntity.status(HttpStatus.CONFLICT).build<Void>().toMono()
                 }
                 ResponseEntity.status(HttpStatus.OK).build<Void>().toMono()
             }
