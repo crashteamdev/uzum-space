@@ -5,7 +5,5 @@ data class RestrictionEntity(
     val uzumAccountLimit: Int,
     val uzumAccountLimitCurrent: Int,
     val itemPoolLimit: Int,
-    val itemPoolLimitCurrent: Int,
-    val itemCompetitorLimit: Int,
-    val itemCompetitorLimitCurrent: Int
+    val itemPoolLimitCurrent: Int
 )

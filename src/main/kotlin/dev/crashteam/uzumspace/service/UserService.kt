@@ -17,11 +17,9 @@ class UserService(
             return RestrictionEntity(
                 userId = userId,
                 uzumAccountLimit = accountRestriction.uzumAccountLimit(),
-                uzumAccountLimitCurrent = accountRestriction.uzumAccountLimit() - uzumAccountShopRepository.countAccounts(userId),
+                uzumAccountLimitCurrent = uzumAccountShopRepository.countAccounts(userId),
                 itemPoolLimit = accountRestriction.itemPoolLimit(),
-                itemPoolLimitCurrent = accountRestriction.itemPoolLimit() - uzumAccountShopRepository.countKeAccountShopItemsInPool(userId),
-                itemCompetitorLimit = accountRestriction.itemCompetitorLimit(),
-                itemCompetitorLimitCurrent = accountRestriction.itemCompetitorLimit() - uzumAccountShopRepository.countCompetitors(userId)
+                itemPoolLimitCurrent = uzumAccountShopRepository.countKeAccountShopItemsInPool(userId)
             )
         }
         return null
