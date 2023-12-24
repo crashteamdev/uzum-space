@@ -1,14 +1,20 @@
 package dev.crashteam.uzumspace.repository.postgre
 
 import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItem.UZUM_ACCOUNT_SHOP_ITEM
+import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItemCompetitor.UZUM_ACCOUNT_SHOP_ITEM_COMPETITOR
 import dev.crashteam.uzumspace.db.model.tables.UzumAccountShopItemPool.UZUM_ACCOUNT_SHOP_ITEM_POOL
 import dev.crashteam.uzumspace.extensions.paginate
 import dev.crashteam.uzumspace.repository.postgre.entity.PaginateEntity
 import dev.crashteam.uzumspace.repository.postgre.entity.UzumAccountShopItemEntity
+import dev.crashteam.uzumspace.repository.postgre.entity.UzumAccountShopItemEntityWithLimitData
 import dev.crashteam.uzumspace.repository.postgre.mapper.RecordToUzumAccountShopItemEntityMapper
+import dev.crashteam.uzumspace.repository.postgre.mapper.RecordToUzumAccountShopItemEntityWithLimitDataMapper
+import dev.crashteam.uzumspace.restriction.SubscriptionPlanResolver
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
+import org.jooq.impl.DSL
+import org.jooq.impl.DSL.*
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -17,7 +23,11 @@ import java.util.*
 @Repository
 class UzumAccountShopItemRepository(
     private val dsl: DSLContext,
-    private val recordToUzumAccountShopItemEntityMapper: RecordToUzumAccountShopItemEntityMapper) {
+    private val recordToUzumAccountShopItemEntityMapper: RecordToUzumAccountShopItemEntityMapper,
+    private val recordToUzumAccountShopItemEntityWithLimitDataMapper: RecordToUzumAccountShopItemEntityWithLimitDataMapper,
+    private val accountRepository: AccountRepository,
+    private val subscriptionPlanResolver: SubscriptionPlanResolver
+) {
 
     fun save(uzumAccountShopItemEntity: UzumAccountShopItemEntity): UUID? {
         val i = UZUM_ACCOUNT_SHOP_ITEM
@@ -195,6 +205,43 @@ class UzumAccountShopItemRepository(
                 i.ID.eq(uzumAccountShopItemId),
             ).fetchOne() ?: return null
         return recordToUzumAccountShopItemEntityMapper.convert(record)
+    }
+
+    fun findShopItem(
+        userId: String,
+        uzumAccountId: UUID,
+        uzumAccountShopItemId: UUID
+    ): UzumAccountShopItemEntityWithLimitData? {
+        val i = UZUM_ACCOUNT_SHOP_ITEM
+        val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
+        val c = UZUM_ACCOUNT_SHOP_ITEM_COMPETITOR
+        val competitorCount = field(
+            select(count(c.UZUM_ACCOUNT_SHOP_ITEM_ID))
+                .from(c)
+                .where(c.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(uzumAccountShopItemId))
+        ).`as`("competitor_count")
+
+        val plan = accountRepository.getAccount(userId)?.subscription?.plan
+        var limit = 0
+        if (plan != null) {
+            val accountRestriction = subscriptionPlanResolver.toAccountRestriction(plan)
+            limit = accountRestriction.itemCompetitorLimit()
+        }
+
+        val record = dsl.select(
+            asterisk(),
+            field(
+                "(SELECT {0})", Integer::class.java, limit
+            ).`as`("competitor_limit"),
+            competitorCount
+        )
+            .from(i.leftJoin(p).on(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(i.ID)))
+            .where(
+                i.UZUM_ACCOUNT_ID.eq(uzumAccountId),
+                i.ID.eq(uzumAccountShopItemId),
+            ).fetchOne() ?: return null
+
+        return recordToUzumAccountShopItemEntityWithLimitDataMapper.convert(record)
     }
 
     fun findAllItems(

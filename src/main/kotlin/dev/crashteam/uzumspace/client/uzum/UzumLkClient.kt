@@ -1,5 +1,6 @@
 package dev.crashteam.uzumspace.client.uzum
 
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import dev.crashteam.uzumspace.client.uzum.model.ProxyRequestBody
 import dev.crashteam.uzumspace.client.uzum.model.ProxyRequestContext
 import dev.crashteam.uzumspace.client.uzum.model.StyxResponse
@@ -95,6 +96,7 @@ class UzumLkClient(
         shopId: Long,
         payload: ShopItemPriceChangePayload
     ): Boolean {
+        val body = jacksonObjectMapper().writeValueAsBytes(payload)
         val proxyRequestBody = ProxyRequestBody(
             url = "https://api-seller.uzum.uz/api/seller/shop/$shopId/product/sendSkuData",
             httpMethod = "POST",
@@ -107,7 +109,8 @@ class UzumLkClient(
                         "Content-Type" to MediaType.APPLICATION_JSON_VALUE,
                         USER_ID_HEADER to userId
                     )
-                )
+                ),
+                ProxyRequestContext("content", Base64.getEncoder().encodeToString(body))
             )
         )
         val responseType: ParameterizedTypeReference<StyxResponse<ShopItemPriceChangePayload>> =

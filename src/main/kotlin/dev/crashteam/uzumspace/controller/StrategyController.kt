@@ -73,6 +73,15 @@ class StrategyController(
     }
 
     override fun getStrategyTypes(exchange: ServerWebExchange?): Mono<ResponseEntity<Flux<StrategyType>>> {
-        return Mono.just(ResponseEntity.ok(Flux.fromIterable(StrategyType.values().toList())))
+        return Mono.just(
+            ResponseEntity.ok(
+                Flux.fromIterable(
+                    listOf(
+                        StrategyType.CLOSE_TO_MINIMAL,
+                        StrategyType.EQUAL_PRICE
+                    )
+                )
+            )
+        )
     }
 }

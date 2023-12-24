@@ -26,7 +26,7 @@
         <testcontainers.version>1.17.3</testcontainers.version>
         <selenium.version>4.4.0</selenium.version>
         <imageio.version>3.9.4</imageio.version>
-        <openapi-uzum-space.version>1.22-ea488a7-server</openapi-uzum-space.version>
+        <openapi-uzum-space.version>1.23-1a6120c-server</openapi-uzum-space.version>
     </properties>
     <dependencies>
         <!-- Spring -->

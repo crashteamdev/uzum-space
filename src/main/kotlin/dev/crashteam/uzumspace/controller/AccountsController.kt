@@ -487,7 +487,7 @@ class AccountsController(
         exchange: ServerWebExchange
     ): Mono<ResponseEntity<UzumAccountShopItem>> {
         return exchange.getPrincipal<Principal>().flatMap { principal ->
-            val uzumAccountShopItem = uzumAccountShopService.getUzumAccountShopItem(principal.name, id, shopItemId)
+            val uzumAccountShopItem = uzumAccountShopService.getUzumAccountShopItemWithLimitData(principal.name, id, shopItemId)
                 ?: return@flatMap ResponseEntity.notFound().build<UzumAccountShopItem>().toMono()
             ResponseEntity.ok(conversionService.convert(uzumAccountShopItem, UzumAccountShopItem::class.java)).toMono()
         }.doOnError {

@@ -14,8 +14,6 @@ class RestrictionEntityToLimitData : DataConverter<RestrictionEntity, LimitData>
             uzumAccountLimitCurrent = source.uzumAccountLimitCurrent.toLong()
             itemPoolLimit = source.itemPoolLimit.toLong()
             itemPoolLimitCurrent = source.itemPoolLimitCurrent.toLong()
-            itemCompetitorLimit = source.itemCompetitorLimit.toLong()
-            itemCompetitorLimitCurrent = source.itemCompetitorLimitCurrent.toLong()
         }
     }
 }

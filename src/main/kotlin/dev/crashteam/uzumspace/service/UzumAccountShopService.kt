@@ -45,6 +45,17 @@ class UzumAccountShopService(
         return uzumAccountShopItemRepository.findShopItem(uzumAccountId, shopItemId)
     }
 
+    fun getUzumAccountShopItemWithLimitData(
+        userId: String,
+        uzumAccountId: UUID,
+        shopItemId: UUID,
+    ): UzumAccountShopItemEntityWithLimitData? {
+        log.debug {
+            "Get ke account shop item. userId=$userId; uzumAccountId=${uzumAccountId}; shopItemId=${shopItemId}"
+        }
+        return uzumAccountShopItemRepository.findShopItem(userId, uzumAccountId, shopItemId)
+    }
+
     fun getUzumAccountShopItems(
         userId: String,
         uzumAccountId: UUID,
