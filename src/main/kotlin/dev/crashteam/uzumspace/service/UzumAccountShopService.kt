@@ -1,5 +1,6 @@
 package dev.crashteam.uzumspace.service
 
+import dev.crashteam.repricer.repository.postgre.entity.UzumAccountShopEntityWithData
 import dev.crashteam.uzumspace.client.uzum.UzumWebClient
 import dev.crashteam.uzumspace.repository.postgre.*
 import dev.crashteam.uzumspace.repository.postgre.entity.*
@@ -29,9 +30,9 @@ class UzumAccountShopService(
     private val accountSubscriptionRestrictionValidator: AccountSubscriptionRestrictionValidator,
 ) {
 
-    fun getUzumAccountShops(userId: String, uzumAccountId: UUID): List<UzumAccountShopEntity> {
+    fun getUzumAccountShops(userId: String, uzumAccountId: UUID): List<UzumAccountShopEntityWithData> {
         log.debug { "Get ke account shops. userId=$userId; uzumAccountId=${uzumAccountId}" }
-        return uzumAccountShopRepository.getUzumAccountShops(userId, uzumAccountId)
+        return uzumAccountShopRepository.getUzumAccountShopsWithData(userId, uzumAccountId)
     }
 
     fun getUzumAccountShopItem(

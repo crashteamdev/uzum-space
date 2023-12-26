@@ -67,7 +67,7 @@ class UzumAccountShopRepository(
         dsl.batchInsert(records).execute()
     }
 
-    fun getKeAccountShopsWithData(userId: String, keAccountId: UUID): List<UzumAccountShopEntityWithData> {
+    fun getUzumAccountShopsWithData(userId: String, accountId: UUID): List<UzumAccountShopEntityWithData> {
         val s = UZUM_ACCOUNT_SHOP
         val k = UZUM_ACCOUNT
         val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
@@ -115,7 +115,7 @@ class UzumAccountShopRepository(
         ).from(s)
             .innerJoin(k).on(k.ID.eq(s.UZUM_ACCOUNT_ID))
             .innerJoin(a).on(k.ACCOUNT_ID.eq(a.ID))
-            .where(a.USER_ID.eq(userId).and(s.UZUM_ACCOUNT_ID.eq(keAccountId)))
+            .where(a.USER_ID.eq(userId).and(s.UZUM_ACCOUNT_ID.eq(accountId)))
             .fetch()
 
         return records.map { recordToUzumAccountShopEntityDataMapper.convert(it) }.toList()
