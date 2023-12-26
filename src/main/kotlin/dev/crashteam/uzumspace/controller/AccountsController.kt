@@ -28,6 +28,8 @@ import reactor.core.publisher.Flux
 import reactor.core.publisher.Mono
 import reactor.core.publisher.toFlux
 import reactor.core.publisher.toMono
+import reactor.core.scheduler.Schedulers
+import java.math.BigDecimal
 import java.security.Principal
 import java.util.*
 
@@ -131,6 +133,59 @@ class AccountsController(
             }
         }.doOnError {
             log.warn(it) { "Failed to add shop item into pool. uzumAccountId=$id" }
+        }
+    }
+
+    override fun addKeAccountShopItemPoolBulk(
+        xRequestID: UUID,
+        id: UUID,
+        addKeAccountShopItemPoolBulkRequest: Mono<AddKeAccountShopItemPoolBulkRequest>,
+        exchange: ServerWebExchange,
+    ): Mono<ResponseEntity<Void>> {
+        return exchange.getPrincipal<Principal>().flatMap { principal ->
+            addKeAccountShopItemPoolBulkRequest.publishOn(Schedulers.boundedElastic()).flatMap { request ->
+                try {
+                    uzumAccountShopService.addShopItemIntoPoolBulk(
+                        principal.name,
+                        id,
+                        request.shopId,
+                        request.shopItemIds
+                    )
+                } catch (e: AccountItemPoolLimitExceededException) {
+                    return@flatMap ResponseEntity.status(HttpStatus.FORBIDDEN).build<Void>().toMono()
+                } catch (e: IllegalArgumentException) {
+                    return@flatMap ResponseEntity.status(HttpStatus.FORBIDDEN).build<Void>().toMono()
+                }
+                ResponseEntity.status(HttpStatus.OK).build<Void>().toMono()
+            }
+        }.doOnError {
+            log.warn(it) { "Failed to add shop items into pool. uzumAccountId=$id" }
+        }
+    }
+
+    override fun removeKeAccountShopItemFromPoolBulk(
+        xRequestID: UUID,
+        id: UUID,
+        addKeAccountShopItemPoolBulkRequest: Mono<AddKeAccountShopItemPoolBulkRequest>,
+        exchange: ServerWebExchange
+    ): Mono<ResponseEntity<Void>> {
+        return exchange.getPrincipal<Principal>().flatMap { principal ->
+            addKeAccountShopItemPoolBulkRequest.flatMap { request ->
+                val removeShopItemFromPoolCount =
+                    uzumAccountShopService.removeShopItemsFromPool(
+                        principal.name,
+                        id,
+                        request.shopId,
+                        request.shopItemIds
+                    )
+                if (removeShopItemFromPoolCount > 0) {
+                    ResponseEntity.ok().build<Void>().toMono()
+                } else {
+                    ResponseEntity.notFound().build<Void>().toMono()
+                }
+            }
+        }.doOnError {
+            log.warn(it) { "Failed to remove ke account shop items from pool. keAccountId=$id" }
         }
     }
 
@@ -572,6 +627,7 @@ class AccountsController(
                         this.skuId = it.skuId
                         this.name = it.name
                         this.photoKey = it.photoKey
+                        this.price = BigDecimal.valueOf(it.price).movePointLeft(2).toDouble()
                     }
                 }
 

@@ -37,6 +37,22 @@ class UzumAccountShopItemPoolRepository(
         ).onDuplicateKeyIgnore().execute()
     }
 
+    fun saveBatch(kazanExpressAccountShopItemPoolEntities: List<UzumAccountShopItemPoolEntity>): IntArray {
+        val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
+        return dsl.batch(
+            kazanExpressAccountShopItemPoolEntities.map { kazanExpressAccountShopItemPoolEntity ->
+                dsl.insertInto(
+                    p,
+                    p.UZUM_ACCOUNT_SHOP_ITEM_ID,
+                    p.LAST_CHECK
+                ).values(
+                    kazanExpressAccountShopItemPoolEntity.uzumAccountShopItemId,
+                    kazanExpressAccountShopItemPoolEntity.lastCheck
+                ).onDuplicateKeyIgnore()
+            }
+        ).execute()
+    }
+
     fun updateLastCheck(uzumAccountShopItemId: UUID, lastCheck: LocalDateTime): Int {
         val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
         return dsl.update(p)
@@ -49,6 +65,13 @@ class UzumAccountShopItemPoolRepository(
         val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
         return dsl.deleteFrom(p)
             .where(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(uzumAccountShopItemId))
+            .execute()
+    }
+
+    fun delete(keAccountShopItemId: List<UUID>): Int {
+        val p = UZUM_ACCOUNT_SHOP_ITEM_POOL
+        return dsl.deleteFrom(p)
+            .where(p.UZUM_ACCOUNT_SHOP_ITEM_ID.`in`(keAccountShopItemId))
             .execute()
     }
 

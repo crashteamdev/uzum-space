@@ -116,6 +116,7 @@ class UzumAccountShopRepository(
             .innerJoin(k).on(k.ID.eq(s.UZUM_ACCOUNT_ID))
             .innerJoin(a).on(k.ACCOUNT_ID.eq(a.ID))
             .where(a.USER_ID.eq(userId).and(s.UZUM_ACCOUNT_ID.eq(accountId)))
+            .orderBy(poolCount.desc())
             .fetch()
 
         return records.map { recordToUzumAccountShopEntityDataMapper.convert(it) }.toList()

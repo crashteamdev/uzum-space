@@ -17,15 +17,15 @@ class AccountSubscriptionRestrictionValidator(
     private val subscriptionPlanResolver: SubscriptionPlanResolver
 ) {
 
-    fun validateItemInPoolCount(userId: String): Boolean {
+    fun validateItemInPoolCount(userId: String, quantity: Int): Boolean {
         val accountEntity = accountRepository.getAccount(userId)!!
 
         if (accountEntity.subscription == null) return false
 
-        val itemsInPoolCount = uzumAccountShopItemPoolRepository.findCountShopItemsInPoolForUser(userId)
+        val itemsInPoolCount = uzumAccountShopItemPoolRepository.findCountShopItemsInPoolForUser(userId) + quantity
         val accountRestriction = subscriptionPlanResolver.toAccountRestriction(accountEntity.subscription.plan)
         val itemPoolLimit = accountRestriction.itemPoolLimit()
-        val poolLimitExceeded = itemsInPoolCount >= itemPoolLimit
+        val poolLimitExceeded = itemsInPoolCount > itemPoolLimit
 
         return !poolLimitExceeded
     }

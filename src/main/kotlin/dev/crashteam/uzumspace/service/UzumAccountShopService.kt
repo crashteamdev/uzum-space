@@ -89,13 +89,48 @@ class UzumAccountShopService(
         log.debug {
             "Add shop item into pool. userId=$userId; uzumAccountId=${uzumAccountId}; uzumAccountShopId=$uzumAccountShopId"
         }
-        val isValidPoolItemCount = accountSubscriptionRestrictionValidator.validateItemInPoolCount(userId)
+        val isValidPoolItemCount = accountSubscriptionRestrictionValidator.validateItemInPoolCount(userId, 1)
 
         if (!isValidPoolItemCount)
             throw AccountItemPoolLimitExceededException("Pool limit exceeded for user. userId=$userId")
 
         val kazanExpressAccountShopItemPoolEntity = UzumAccountShopItemPoolEntity(uzumAccountShopItemId)
         uzumAccountShopItemPoolRepository.save(kazanExpressAccountShopItemPoolEntity)
+    }
+
+    @Transactional
+    fun addShopItemIntoPoolBulk(
+        userId: String,
+        uzumAccountId: UUID,
+        uzumAccountShopId: UUID,
+        uzumAccountShopItemIds: List<UUID>,
+    ) {
+        log.debug {
+            "Add shop items into pool. userId=$userId; uzumAccountId=${uzumAccountId};" +
+                    " uzumAccountShopId=$uzumAccountShopId itemSize=${uzumAccountShopItemIds.stream()}"
+        }
+        val isValidPoolItemCount =
+            accountSubscriptionRestrictionValidator.validateItemInPoolCount(userId, uzumAccountShopItemIds.size)
+
+        if (!isValidPoolItemCount)
+            throw AccountItemPoolLimitExceededException("Pool limit exceeded for user. userId=$userId")
+
+        val kazanExpressAccountShopItemPoolEntities =
+            uzumAccountShopItemIds.map { UzumAccountShopItemPoolEntity(it) }
+        uzumAccountShopItemPoolRepository.saveBatch(kazanExpressAccountShopItemPoolEntities)
+    }
+
+    fun removeShopItemsFromPool(
+        userId: String,
+        uzumAccountId: UUID,
+        uzumAccountShopId: UUID,
+        uzumShopItemIds: List<UUID>,
+    ): Int {
+        log.debug {
+            "Remove shop items from pool. userId=$userId; uzumAccountId=$uzumAccountId;" +
+                    " uzumAccountShopId=$uzumAccountShopId; uzumShopItemIdsCount=${uzumShopItemIds.size};"
+        }
+        return uzumAccountShopItemPoolRepository.delete(uzumShopItemIds)
     }
 
     @Transactional
