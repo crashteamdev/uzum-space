@@ -22,7 +22,8 @@ class RecordToUzumAccountShopItemPriceHistoryEntityJoinShopItemAndShopMapper :
             changeTime = record.getValue(UZUM_ACCOUNT_SHOP_ITEM_PRICE_HISTORY.CHANGE_TIME),
             oldPrice = record.getValue(UZUM_ACCOUNT_SHOP_ITEM_PRICE_HISTORY.OLD_PRICE),
             price = record.getValue(UZUM_ACCOUNT_SHOP_ITEM_PRICE_HISTORY.PRICE),
-            barcode = record.getValue(UZUM_ACCOUNT_SHOP_ITEM.BARCODE)
+            barcode = record.getValue(UZUM_ACCOUNT_SHOP_ITEM.BARCODE),
+            photoKey = record.getValue(UZUM_ACCOUNT_SHOP_ITEM.PHOTO_KEY),
         )
     }
 }
