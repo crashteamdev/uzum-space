@@ -1,7 +1,9 @@
 package dev.crashteam.uzumspace.config.security
 
+import dev.crashteam.uzumspace.db.model.enums.SubscriptionPlan
 import dev.crashteam.uzumspace.repository.postgre.AccountRepository
 import dev.crashteam.uzumspace.repository.postgre.entity.AccountEntity
+import dev.crashteam.uzumspace.repository.postgre.entity.SubscriptionEntity
 import org.springframework.http.HttpStatus
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken
 import org.springframework.stereotype.Component
@@ -12,6 +14,7 @@ import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
 import java.security.Principal
+import java.time.LocalDateTime
 
 @Component
 class UserCreationFilter(
@@ -26,7 +29,18 @@ class UserCreationFilter(
             if (it is JwtAuthenticationToken) {
                 val accountEntity = accountRepository.getAccount(it.name)
                 if (accountEntity == null) {
-                    accountRepository.save(AccountEntity(userId = it.name))
+                    accountRepository.save(
+                        AccountEntity(
+                            userId = it.name,
+                            subscription = SubscriptionEntity(
+                                id = 1,
+                                "Базовый",
+                                SubscriptionPlan.default_,
+                                price = 600000
+                            ),
+                            subscriptionValidUntil = LocalDateTime.now().plusDays(60)
+                        )
+                    )
                 }
             }
             chain.filter(exchange)

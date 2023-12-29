@@ -64,6 +64,7 @@ class UzumShopItemPriceHistoryRepository(
             i.NAME.`as`("item_name"),
             i.BARCODE,
             s.NAME.`as`("shop_name"),
+            i.PHOTO_KEY,
         )
             .from(p)
             .join(i).on(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(i.ID))
@@ -108,6 +109,7 @@ class UzumShopItemPriceHistoryRepository(
             i.NAME.`as`("item_name"),
             i.BARCODE,
             s.NAME.`as`("shop_name"),
+            i.PHOTO_KEY,
         )
             .from(p)
             .join(i).on(p.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(i.ID))
