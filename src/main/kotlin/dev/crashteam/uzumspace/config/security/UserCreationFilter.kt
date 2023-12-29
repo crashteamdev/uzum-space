@@ -14,6 +14,7 @@ import org.springframework.web.server.WebFilter
 import org.springframework.web.server.WebFilterChain
 import reactor.core.publisher.Mono
 import java.security.Principal
+import java.time.LocalDateTime
 
 @Component
 class UserCreationFilter(
@@ -36,7 +37,8 @@ class UserCreationFilter(
                                 "Базовый",
                                 SubscriptionPlan.default_,
                                 price = 600000
-                            )
+                            ),
+                            subscriptionValidUntil = LocalDateTime.now().plusDays(60)
                         )
                     )
                 }
