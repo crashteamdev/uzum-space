@@ -16,7 +16,7 @@ import java.security.Principal
 import java.util.*
 
 @RestController
-@RequestMapping("/v1/repricer")
+@RequestMapping("/v1")
 class SubscriptionsController(
     private val subscriptionRepository: SubscriptionRepository,
 ) : SubscriptionsApi {

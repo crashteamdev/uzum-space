@@ -19,7 +19,7 @@ import java.time.ZoneOffset
 import java.util.*
 
 @RestController
-@RequestMapping("/v1/repricer")
+@RequestMapping("/v1")
 class UserController(
     private val accountRepository: AccountRepository,
     private val userService: UserService,
