@@ -29,7 +29,7 @@ class UzumAccountShopItemStrategyRepository(
             itemStrategy.UZUM_ACCOUNT_SHOP_ITEM_ID
         ).values(
             strategyType,
-            strategyRequest.uzumAccountShopItemId
+            strategyRequest.accountShopItemId
         ).returningResult(itemStrategy.ID)
             .fetchOne()!!
             .getValue(itemStrategy.ID)

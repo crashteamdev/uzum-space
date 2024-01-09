@@ -15,7 +15,7 @@ class UzumAccountShopItemStrategyConverter: DataConverter<UzumAccountShopItemStr
             step = source.step
             strategyType = source.strategyType
             discount = source.discount?.toBigDecimal()
-            keAccountShopItemId = source.keAccountShopItemId
+            accountShopItemId = source.accountShopItemId
         }
     }
 }

@@ -3,6 +3,7 @@ package dev.crashteam.uzumspace.controller
 import dev.crashteam.openapi.space.api.StrategiesApi
 import dev.crashteam.openapi.space.model.*
 import dev.crashteam.uzumspace.service.UzumShopItemStrategyService
+import mu.KotlinLogging
 import org.springframework.core.convert.ConversionService
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -14,6 +15,8 @@ import reactor.core.publisher.Mono
 import reactor.core.publisher.toMono
 import java.security.Principal
 import java.util.*
+
+private val log = KotlinLogging.logger {}
 
 @RestController
 @RequestMapping("/v1")
@@ -29,9 +32,11 @@ class StrategyController(
     ): Mono<ResponseEntity<UzumAccountShopItemStrategy>> {
         return addStrategyRequest.flatMap {
             uzumShopItemStrategyService.saveStrategy(it)
-            val strategy = uzumShopItemStrategyService.findStrategy(it.uzumAccountShopItemId)
+            val strategy = uzumShopItemStrategyService.findStrategy(it.accountShopItemId)
             val itemStrategy = conversionService.convert(strategy, UzumAccountShopItemStrategy::class.java)
             return@flatMap ResponseEntity.status(HttpStatus.CREATED).body(itemStrategy).toMono()
+        }.doOnError {
+            log.warn(it) { "Failed to add strategy" }
         }
     }
 
@@ -43,6 +48,8 @@ class StrategyController(
         return exchange.getPrincipal<Principal>().flatMap {
             uzumShopItemStrategyService.deleteStrategy(shopItemId)
             return@flatMap ResponseEntity.noContent().build<Void>().toMono()
+        }.doOnError {
+            log.warn(it) { "Failed to delete strategy. accountShopItemId=$shopItemId" }
         }
     }
 
@@ -55,6 +62,8 @@ class StrategyController(
             val strategy = uzumShopItemStrategyService.findStrategy(shopItemId)
             val strategyDto = conversionService.convert(strategy, UzumAccountShopItemStrategy::class.java)
             return@flatMap ResponseEntity.ok().body(strategyDto).toMono()
+        }.doOnError {
+            log.warn(it) { "Failed to get strategy. uzumAccountShopItemId=$shopItemId" }
         }
     }
 
@@ -69,6 +78,8 @@ class StrategyController(
             val strategy = uzumShopItemStrategyService.findStrategy(shopItemId)
             val itemStrategy = conversionService.convert(strategy, UzumAccountShopItemStrategy::class.java)
             return@flatMap ResponseEntity.ok().body(itemStrategy).toMono()
+        }.doOnError {
+            log.warn(it) { "Failed to patch strategy. accountShopItemId=$shopItemId" }
         }
     }
 

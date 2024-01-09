@@ -16,8 +16,8 @@ class UserService(
             val accountRestriction = subscriptionPlanResolver.toAccountRestriction(plan)
             return RestrictionEntity(
                 userId = userId,
-                uzumAccountLimit = accountRestriction.uzumAccountLimit(),
-                uzumAccountLimitCurrent = uzumAccountShopRepository.countAccounts(userId),
+                accountLimit = accountRestriction.uzumAccountLimit(),
+                accountLimitCurrent = uzumAccountShopRepository.countAccounts(userId),
                 itemPoolLimit = accountRestriction.itemPoolLimit(),
                 itemPoolLimitCurrent = uzumAccountShopRepository.countKeAccountShopItemsInPool(userId)
             )
