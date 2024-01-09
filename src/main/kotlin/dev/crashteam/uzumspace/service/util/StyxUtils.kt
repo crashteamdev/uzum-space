@@ -9,14 +9,14 @@ import org.springframework.http.HttpStatus
 private val log = KotlinLogging.logger {}
 
 object StyxUtils {
-     fun <T> handleProxyResponse(styxResponse: StyxResponse<T>): T? {
+    fun <T> handleProxyResponse(styxResponse: StyxResponse<T>): T? {
         val originalStatus = styxResponse.originalStatus
         val statusCode = HttpStatus.resolve(originalStatus)
         val isError = statusCode == null
                 || statusCode.series() == HttpStatus.Series.CLIENT_ERROR
                 || statusCode.series() == HttpStatus.Series.SERVER_ERROR
-        log.debug { "Styx response: $styxResponse" }
         if (isError) {
+            log.error { "Bad response. StyxStatus=${styxResponse.code}; Status=$originalStatus; Body=${styxResponse.body.toString()}" }
             throw UzumProxyClientException(
                 originalStatus,
                 styxResponse.body.toString(),
