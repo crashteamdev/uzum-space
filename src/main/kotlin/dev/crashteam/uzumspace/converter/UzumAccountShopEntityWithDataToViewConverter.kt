@@ -1,9 +1,8 @@
-package dev.crashteam.repricer.converter
+package dev.crashteam.uzumspace.converter
 
 import dev.crashteam.openapi.space.model.ShopData
 import dev.crashteam.openapi.space.model.UzumAccountShop
 import dev.crashteam.repricer.repository.postgre.entity.UzumAccountShopEntityWithData
-import dev.crashteam.uzumspace.converter.DataConverter
 import org.springframework.stereotype.Component
 
 @Component
