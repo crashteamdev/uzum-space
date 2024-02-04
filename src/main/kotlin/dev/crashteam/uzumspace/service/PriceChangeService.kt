@@ -2,7 +2,6 @@ package dev.crashteam.uzumspace.service
 
 import dev.crashteam.uzumspace.client.uzum.model.lk.*
 import dev.crashteam.uzumspace.db.model.enums.StrategyType
-import dev.crashteam.uzumspace.price.CloseToMinimalPriceChangeCalculatorStrategy
 import dev.crashteam.uzumspace.price.PriceChangeCalculatorStrategy
 import dev.crashteam.uzumspace.price.model.CalculationResult
 import dev.crashteam.uzumspace.price.model.CalculatorOptions
@@ -16,7 +15,6 @@ import org.springframework.retry.support.RetryTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
 import java.math.BigDecimal
-import java.math.BigInteger
 import java.time.LocalDateTime
 import java.util.*
 
@@ -82,7 +80,9 @@ class PriceChangeService(
                         productId = poolFilledEntity.productId,
                         skuForProduct = poolFilledEntity.productSku,
                         skuList = newSkuList,
-                        skuTitlesForCustomCharacteristics = if (accountProductDescription.hasCustomCharacteristics) {
+                        skuTitlesForCustomCharacteristics = if (accountProductDescription.hasCustomCharacteristics
+                            && accountProductDescription.customCharacteristicList != null
+                        ) {
                             accountProductDescription.customCharacteristicList.map { customCharacteristic ->
                                 SkuTitleCharacteristic(
                                     customCharacteristic.characteristicTitle,
