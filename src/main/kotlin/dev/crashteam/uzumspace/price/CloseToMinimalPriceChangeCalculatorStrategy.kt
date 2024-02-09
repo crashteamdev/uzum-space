@@ -37,15 +37,19 @@ class CloseToMinimalPriceChangeCalculatorStrategy(
         }.minByOrNull {
             uzumShopItemService.getRecentPrice(it.shopItemEntity)!!
         } ?: return null
-        log.debug { "Minimal price competitor: $minimalPriceCompetitor" }
+        log.debug { "Minimal price competitor: $minimalPriceCompetitor. accountShopItemId=$uzumAccountShopItemId" }
         val competitorPrice: BigDecimal = uzumShopItemService.getRecentPrice(minimalPriceCompetitor.shopItemEntity)!!
         val competitorPriceMinor = competitorPrice.movePointRight(2)
+        log.debug { "Recent competitor price: $competitorPrice. accountShopItemId=$uzumAccountShopItemId" }
 
         if (competitorPriceMinor >= sellPriceMinor) {
-            log.debug { "Competitor price is the same or higher." +
-                    " competitorPrice=${competitorPriceMinor}; sellPrice=$sellPriceMinor" }
+            log.debug {
+                "Competitor price is the same or higher." +
+                        " competitorPrice=${competitorPriceMinor}; sellPrice=$sellPriceMinor. accountShopItemId=$uzumAccountShopItemId"
+            }
             // If price too much higher than our we need to rise our price
-            val expectedPriceMinor = competitorPrice - (options?.step?.toBigDecimal() ?: BigDecimal.ZERO).movePointRight(2)
+            val expectedPriceMinor =
+                competitorPriceMinor - (options?.step?.toBigDecimal() ?: BigDecimal.ZERO).movePointRight(2)
             if (expectedPriceMinor > sellPriceMinor) {
                 return CalculationResult(
                     newPriceMinor = expectedPriceMinor,
@@ -55,7 +59,7 @@ class CloseToMinimalPriceChangeCalculatorStrategy(
             return null // No need to change price
         } else {
             val newPrice: BigDecimal = (competitorPrice - (options?.step?.toBigDecimal() ?: BigDecimal.ZERO))
-            log.debug { "Competitor price = $competitorPrice. New price = $newPrice. Current sell price = $sellPriceMinor" }
+            log.debug { "Competitor price = $competitorPrice. New price = $newPrice. Current sell price = $sellPriceMinor. accountShopItemId=$uzumAccountShopItemId" }
 
             var newPriceMinor = newPrice.movePointRight(2)
             if (options?.minimumThreshold != null && newPriceMinor < BigDecimal.valueOf(options.minimumThreshold)) {
@@ -63,7 +67,7 @@ class CloseToMinimalPriceChangeCalculatorStrategy(
             } else if (options?.maximumThreshold != null && newPriceMinor > BigDecimal.valueOf(options.maximumThreshold)) {
                 newPriceMinor = BigDecimal.valueOf(options.maximumThreshold)
             }
-            log.debug { "newPriceMinor=$newPriceMinor;sellPriceMinor=$sellPriceMinor" }
+            log.debug { "newPriceMinor=$newPriceMinor;sellPriceMinor=$sellPriceMinor. accountShopItemId=$uzumAccountShopItemId" }
 
             if (newPriceMinor == sellPriceMinor) return null // No need to change price
 
