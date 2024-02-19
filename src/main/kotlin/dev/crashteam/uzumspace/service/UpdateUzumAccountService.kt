@@ -163,12 +163,6 @@ class UpdateUzumAccountService(
             uzumAccountShopItemRepository.saveBatch(shopItemEntities)
             page += 1
         }
-        val oldItemDeletedCount = uzumAccountShopItemRepository.deleteWhereOldLastUpdate(
-            uzumAccountId,
-            accountShopEntity.id!!,
-            shopUpdateTime
-        )
-        log.debug { "Deleted $oldItemDeletedCount old products" }
     }
 
     private fun getProductInfo(
