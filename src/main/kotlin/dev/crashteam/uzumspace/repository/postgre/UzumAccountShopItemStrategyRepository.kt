@@ -66,12 +66,12 @@ class UzumAccountShopItemStrategyRepository(
         return strategiesMap[strategyEntityType]!!.update(strategyOptionId, strategy)
     }
 
-    fun findById(keAccountShopItemId: UUID): UzumAccountShopItemStrategyEntity? {
+    fun findById(uzumAccountShopItemId: UUID): UzumAccountShopItemStrategyEntity? {
         val i = UZUM_ACCOUNT_SHOP_ITEM_STRATEGY
         val o = STRATEGY_OPTION
         return dsl.select()
             .from(i.leftJoin(o).on(i.ID.eq(o.UZUM_ACCOUNT_SHOP_ITEM_STRATEGY_ID)))
-            .where(i.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(keAccountShopItemId))
+            .where(i.UZUM_ACCOUNT_SHOP_ITEM_ID.eq(uzumAccountShopItemId))
             .fetchOne()?.map { strategyMapper.convert(it) }
     }
 

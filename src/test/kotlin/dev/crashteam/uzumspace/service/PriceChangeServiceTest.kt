@@ -2,6 +2,7 @@ package dev.crashteam.uzumspace.service
 
 import dev.crashteam.openapi.space.model.AddStrategyRequest
 import dev.crashteam.openapi.space.model.EqualPriceStrategy
+import dev.crashteam.openapi.space.model.PatchStrategy
 import dev.crashteam.uzumspace.ContainerConfiguration
 import dev.crashteam.uzumspace.client.uzum.model.lk.AccountProductDescription
 import dev.crashteam.uzumspace.db.model.enums.MonitorState
@@ -148,6 +149,10 @@ class PriceChangeServiceTest : ContainerConfiguration() {
 
         val strategyRequest = AddStrategyRequest(uzumAccountShopItemId, equalPriceStrategy)
         strategyRepository.save(strategyRequest)
+
+        val patchStrategy = PatchStrategy()
+        patchStrategy.strategy = equalPriceStrategy
+        strategyRepository.update(uzumAccountShopItemId, patchStrategy)
 
         whenever(uzumSecureService.getProductDescription(any(), any(), any(), any() )).then {
             AccountProductDescription(
