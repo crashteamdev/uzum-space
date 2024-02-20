@@ -1,8 +1,7 @@
 package dev.crashteam.repricer.repository.postgre
 
-import dev.crashteam.openapi.space.model.QuantityDependentStrategy
-import dev.crashteam.openapi.space.model.Strategy
 import dev.crashteam.openapi.space.model.EqualPriceStrategy
+import dev.crashteam.openapi.space.model.Strategy
 import dev.crashteam.uzumspace.db.model.enums.StrategyType
 import dev.crashteam.uzumspace.db.model.tables.StrategyOption
 import org.jooq.DSLContext
@@ -30,10 +29,10 @@ class EqualPriceStrategyOptionRepository(private val dsl: DSLContext) :
     }
 
     override fun <T : Strategy> update(id: Long, t: T): Int {
-        val strategy = t as QuantityDependentStrategy
+        val strategy = t as EqualPriceStrategy
         val strategyOption = StrategyOption.STRATEGY_OPTION
         return dsl.update(strategyOption)
-            .set(strategyOption.MAXIMUM_THRESHOLD, strategy.minimumThreshold.toBigDecimal().movePointRight(2).toLong())
+            .set(strategyOption.MAXIMUM_THRESHOLD, strategy.maximumThreshold.toBigDecimal().movePointRight(2).toLong())
             .set(strategyOption.MINIMUM_THRESHOLD, strategy.minimumThreshold.toBigDecimal().movePointRight(2).toLong())
             .set(strategyOption.DISCOUNT, strategy.discount?.intValueExact())
             .where(strategyOption.ID.eq(id))
