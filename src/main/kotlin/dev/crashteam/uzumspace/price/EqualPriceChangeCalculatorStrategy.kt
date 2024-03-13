@@ -34,7 +34,15 @@ class EqualPriceChangeCalculatorStrategy(
         val competitorPrice: BigDecimal = uzumShopItemService.getRecentPrice(minimalPriceCompetitor.shopItemEntity)!!
         val competitorPriceMinor = competitorPrice.movePointRight(2)
 
-        if (options?.minimumThreshold != null && competitorPriceMinor < BigDecimal.valueOf(options.minimumThreshold)
+        if ((options?.minimumThreshold != null && options.maximumThreshold != null)
+            && (competitorPriceMinor >= BigDecimal.valueOf(options.minimumThreshold)
+                    && competitorPriceMinor <= BigDecimal.valueOf(options.maximumThreshold))
+        ) {
+            return CalculationResult(
+                newPriceMinor = competitorPriceMinor,
+                competitorId = minimalPriceCompetitor.competitorEntity.id
+            )
+        } else if (options?.minimumThreshold != null && competitorPriceMinor < BigDecimal.valueOf(options.minimumThreshold)
             && sellPriceMinor != BigDecimal.valueOf(options.minimumThreshold)
         ) {
             return CalculationResult(
@@ -51,7 +59,8 @@ class EqualPriceChangeCalculatorStrategy(
         }
 
         if ((options?.maximumThreshold == null && competitorPriceMinor > sellPriceMinor)
-            || (options?.minimumThreshold == null && competitorPriceMinor < sellPriceMinor)) {
+            || (options?.minimumThreshold == null && competitorPriceMinor < sellPriceMinor)
+        ) {
             return CalculationResult(
                 newPriceMinor = competitorPriceMinor,
                 competitorId = minimalPriceCompetitor.competitorEntity.id
