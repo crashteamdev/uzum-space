@@ -4,6 +4,7 @@ import dev.crashteam.uzumspace.price.model.CalculationResult
 import dev.crashteam.uzumspace.price.model.CalculatorOptions
 import dev.crashteam.uzumspace.repository.postgre.UzumAccountShopItemCompetitorRepository
 import dev.crashteam.uzumspace.repository.postgre.entity.UzumAccountShopItemCompetitorEntity
+import dev.crashteam.uzumspace.service.AnalyticsService
 import dev.crashteam.uzumspace.service.UzumShopItemService
 import dev.crashteam.uzumspace.service.model.ShopItemCompetitor
 import mu.KotlinLogging
@@ -14,7 +15,8 @@ private val log = KotlinLogging.logger {}
 
 class EqualPriceChangeCalculatorStrategy(
     private val uzumAccountShopItemCompetitorRepository: UzumAccountShopItemCompetitorRepository,
-    private val uzumShopItemService: UzumShopItemService
+    private val uzumShopItemService: UzumShopItemService,
+    private val analyticsService: AnalyticsService
 ) : PriceChangeCalculatorStrategy {
     override fun calculatePrice(
         uzumAccountShopItemId: UUID,
@@ -30,10 +32,29 @@ class EqualPriceChangeCalculatorStrategy(
             ) ?: return@mapNotNull null
             ShopItemCompetitor(shopItemEntity, it)
         }.filter {
-            it.shopItemEntity.availableAmount > 0
+            if (options?.competitorAvailableAmount != null) {
+                it.shopItemEntity.availableAmount > options.competitorAvailableAmount
+            } else {
+                true
+            }
         }.minByOrNull {
             uzumShopItemService.getRecentPrice(it.shopItemEntity)!!
         } ?: return null
+
+        if (minimalPriceCompetitor.shopItemEntity.availableAmount.toInt() <= 0 && options?.changeNotAvailableItemPrice == false) {
+            log.info { "Competitor available amount is 0, not changing price" }
+            return null
+        }
+
+        if (options?.competitorSalesAmount != null) {
+            val competitorSales = analyticsService.getCompetitorSales(minimalPriceCompetitor.competitorEntity.productId)
+                ?: return null
+            if (competitorSales <= options.competitorSalesAmount) {
+                log.info { "Last sale value of competitor is $competitorSales and our barrier is ${options.competitorSalesAmount}." }
+                return null
+            }
+        }
+
         val competitorPrice: BigDecimal = uzumShopItemService.getRecentPrice(minimalPriceCompetitor.shopItemEntity)!!
         val competitorPriceMinor = competitorPrice.movePointRight(2)
 
@@ -49,7 +70,7 @@ class EqualPriceChangeCalculatorStrategy(
             newPriceMinor = BigDecimal.valueOf(options.maximumThreshold)
         }
         if (newPriceMinor != null && newPriceMinor.compareTo(sellPriceMinor) == 0) {
-            log.info { "New price $newPriceMinor equal to current price for shop item $uzumAccountShopItemId" }
+            log.info { "New price $newPriceMinor equal to current price $sellPriceMinor for shop item $uzumAccountShopItemId" }
             return null
         } else if (newPriceMinor != null) {
             return CalculationResult(
@@ -66,6 +87,10 @@ class EqualPriceChangeCalculatorStrategy(
                 competitorId = minimalPriceCompetitor.competitorEntity.id
             )
         }
-        return null;
+        log.debug {
+            "Competitor price $competitorPriceMinor, ours min price - ${options?.minimumThreshold}, " +
+                    "max price ${options?.maximumThreshold}. Current sell price - $sellPriceMinor. Shop item id - $uzumAccountShopItemId"
+        }
+        return null
     }
 }

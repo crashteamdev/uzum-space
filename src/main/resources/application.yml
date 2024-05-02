@@ -106,3 +106,7 @@ redis:
       streamName: payment-stream
       consumerGroup: uzum-space-payment-group
       consumerName: uzum-space-payment-consumer
+
+grpc:
+  client:
+    uzumAnalyticsService.address: static://localhost:9090

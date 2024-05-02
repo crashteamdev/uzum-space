@@ -17,7 +17,10 @@ class RecordToUzumAccountShopItemStrategyEntityMapper : RecordMapper<UzumAccount
             record.getValue(STRATEGY_OPTION.MAXIMUM_THRESHOLD),
             record.getValue(STRATEGY_OPTION.STEP),
             record.getValue(STRATEGY_OPTION.DISCOUNT),
-            record.getValue(UZUM_ACCOUNT_SHOP_ITEM_STRATEGY.UZUM_ACCOUNT_SHOP_ITEM_ID)
+            record.getValue(UZUM_ACCOUNT_SHOP_ITEM_STRATEGY.UZUM_ACCOUNT_SHOP_ITEM_ID),
+            record.getValue(STRATEGY_OPTION.CHANGE_NOT_AVAILABLE_ITEM_PRICE),
+            record.getValue(STRATEGY_OPTION.COMPETITOR_AVAILABLE_AMOUNT),
+            record.getValue(STRATEGY_OPTION.COMPETITOR_SALES_AMOUNT)
         )
     }
 }

@@ -59,6 +59,10 @@ class PriceChangeServiceTest : ContainerConfiguration() {
     @MockBean
     lateinit var uzumSecureService: UzumSecureService
 
+    @MockBean
+    lateinit var analyticsService: AnalyticsService
+
+
     val userId = UUID.randomUUID().toString()
 
     val uzumAccountId = UUID.randomUUID()
@@ -114,6 +118,63 @@ class PriceChangeServiceTest : ContainerConfiguration() {
                 step = 10
             )
         )
+    }
+
+    @Test
+    fun `test not change price when competitor without sales`() {
+
+        whenever(analyticsService.getCompetitorSales(635243L)).then {0L}
+
+        val uzumAccountShopItemCompetitorEntity = UzumAccountShopItemCompetitorEntity(
+            id = UUID.randomUUID(),
+            uzumAccountShopItemId = uzumAccountShopItemId,
+            productId = 635243L,
+            skuId = 4231453L
+        )
+        val competitorKeShopItemEntity = UzumShopItemEntity(
+            productId = 635243L,
+            skuId = 4231453L,
+            categoryId = 556231L,
+            name = "test",
+            photoKey = "test",
+            avgHashFingerprint = "test",
+            pHashFingerprint = "test",
+            price = 7000,
+            availableAmount = 10,
+            lastUpdate = LocalDateTime.now()
+        )
+        uzumShopItemPoolRepository.save(UzumAccountShopItemPoolEntity(uzumAccountShopItemId))
+
+        uzumShopItemRepository.save(competitorKeShopItemEntity)
+        uzumAccountShopItemCompetitorRepository.save(uzumAccountShopItemCompetitorEntity)
+
+        val equalPriceStrategy = EqualPriceStrategy("equal_price", 10.0, 60.0)
+        equalPriceStrategy.competitorSalesAmount = 0
+        val strategyRequest = AddStrategyRequest(uzumAccountShopItemId, equalPriceStrategy)
+        strategyRepository.save(strategyRequest)
+
+        val patchStrategy = PatchStrategy()
+        patchStrategy.strategy = equalPriceStrategy
+        strategyRepository.update(uzumAccountShopItemId, patchStrategy)
+
+        whenever(uzumSecureService.getProductDescription(any(), any(), any(), any() )).then {
+            AccountProductDescription(
+                id = 12345L,
+                shopSkuTitle = "skuTitle",
+                title = "justTitle",
+                productSkuTitle = "productSkuTitle",
+                commission = 1,
+                hasActiveCalendarEvents = true,
+                hasCustomCharacteristics = false,
+                definedCharacteristicList = emptyList(),
+                customCharacteristicList = emptyList(),
+                skuList = emptyList()
+            )
+        }
+        whenever(uzumSecureService.changeAccountShopItemPrice(any(), any(), any(), any())).then { true }
+        priceChangeService.recalculateUserShopItemPrice(userId, uzumAccountId)
+        assertEquals(uzumAccountShopItemRepository.findShopItem(uzumAccountId, uzumAccountShopItemId)?.price, 10000)
+
     }
 
     @Test

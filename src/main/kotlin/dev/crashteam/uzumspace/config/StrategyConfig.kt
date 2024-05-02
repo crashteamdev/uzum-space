@@ -10,6 +10,7 @@ import dev.crashteam.uzumspace.price.EqualPriceChangeCalculatorStrategy
 import dev.crashteam.uzumspace.price.PriceChangeCalculatorStrategy
 import dev.crashteam.uzumspace.price.QuantityDependentPriceChangeCalculatorStrategy
 import dev.crashteam.uzumspace.repository.postgre.UzumAccountShopItemCompetitorRepository
+import dev.crashteam.uzumspace.service.AnalyticsService
 import dev.crashteam.uzumspace.service.UzumShopItemService
 import org.jooq.DSLContext
 import org.springframework.context.annotation.Bean
@@ -31,19 +32,23 @@ class StrategyConfig {
     fun calculators(
         competitorRepository: UzumAccountShopItemCompetitorRepository,
         uzumShopItemService: UzumShopItemService,
+        analyticsService: AnalyticsService
     ): Map<StrategyType, PriceChangeCalculatorStrategy> {
         return mapOf(
             StrategyType.close_to_minimal to CloseToMinimalPriceChangeCalculatorStrategy(
                 competitorRepository,
-                uzumShopItemService
+                uzumShopItemService,
+                analyticsService
             ),
             StrategyType.quantity_dependent to QuantityDependentPriceChangeCalculatorStrategy(
                 competitorRepository,
-                uzumShopItemService
+                uzumShopItemService,
+                analyticsService
             ),
             StrategyType.equal_price to EqualPriceChangeCalculatorStrategy(
                 competitorRepository,
-                uzumShopItemService
+                uzumShopItemService,
+                analyticsService
             )
         )
     }
